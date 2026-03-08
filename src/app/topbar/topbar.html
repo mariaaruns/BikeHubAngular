@@ -1,0 +1,44 @@
+<header class="topbar">
+  <!-- Sidebar Toggle -->
+  <button class="icon-button" (click)="toggleSidebar()" aria-label="Toggle Sidebar">
+    <span class="icon">☰</span>
+  </button>
+
+  <div class="spacer"></div>
+
+  <div class="topbar-actions">
+    <!-- Theme Toggle -->
+    <button class="icon-button" (click)="toggleTheme()" aria-label="Toggle Theme"
+      [title]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+      <span class="icon" *ngIf="themeService.isDarkMode()">☀️</span>
+      <span class="icon" *ngIf="!themeService.isDarkMode()">🌙</span>
+    </button>
+
+    <!-- Alerts Notification -->
+    <button class="icon-button notification-btn" aria-label="Alerts">
+      <span class="icon">🔔</span>
+      <span class="badge">3</span>
+    </button>
+
+    <!-- User Profile -->
+    <div class="user-profile-container">
+      <div class="user-profile" (click)="toggleProfileMenu()">
+        <img src="https://ui-avatars.com/api/?name=User+Profile&background=3b82f6&color=fff" alt="User Avatar"
+          class="avatar">
+        <div class="user-info">
+          <span class="user-name">{{userFullName()}}</span>
+          <span class="user-role">{{userRole()}}</span>
+        </div>
+        <span class="chevron" [class.rotated]="isProfileMenuOpen()">▼</span>
+      </div>
+
+      <!-- Popover Menu -->
+      <div class="profile-popover" *ngIf="isProfileMenuOpen()">
+        <button class="popover-item danger-text" (click)="logout()">
+          <span class="popover-icon">🚪</span>
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

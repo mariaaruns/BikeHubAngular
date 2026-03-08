@@ -1,0 +1,13 @@
+<div class="layout-wrapper" [class.sidebar-open]="layoutService.isSidebarOpen()">
+  <!-- Backdrop for mobile -->
+  <div class="sidebar-backdrop" *ngIf="layoutService.isSidebarOpen()" (click)="layoutService.closeSidebar()"></div>
+
+  <app-sidebar class="app-sidebar" [class.collapsed]="layoutService.isSidebarCollapsed()"></app-sidebar>
+
+  <div class="main-container">
+    <app-topbar></app-topbar>
+    <main class="content-wrapper">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

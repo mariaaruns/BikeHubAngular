@@ -1,0 +1,268 @@
+<div class="page-wrapper">
+
+  <!-- ── Page Header ── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Orders</h1>
+      <span class="page-subtitle">{{ totalRecords() }} total orders</span>
+    </div>
+
+    <!-- Advanced Filter Bar & Page Size -->
+    <div class="toolbar filter-toolbar">
+
+      <div class="filter-group">
+        <label>Order ID</label>
+        <div class="search-box filter-box">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0015.803 15.803z" />
+          </svg>
+          <input type="number" class="search-input" placeholder="Search ID..." [ngModel]="searchOrderId()"
+            (ngModelChange)="searchOrderId.set($event)" (keyup.enter)="onFilter()" />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label>Status</label>
+        <select class="filter-select" [ngModel]="searchOrderStatus()"
+          (ngModelChange)="searchOrderStatus.set($event); onFilter()">
+          @for (status of orderStatuses(); track status.value) {
+          <option [value]="status.value">{{ status.text }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Month</label>
+        <input type="month" class="filter-date filter-select" [ngModel]="searchStartDate()"
+          (ngModelChange)="searchStartDate.set($event); onFilter()" />
+      </div>
+
+      <div class="filter-actions">
+        <button class="search-btn" (click)="onFilter()">Filter</button>
+      </div>
+
+      <div class="page-size-wrap">
+        <label>Show</label>
+        <select class="page-size-select" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Error / Loading ── -->
+  @if (errorMessage()) {
+  <div class="alert error">⚠ {{ errorMessage() }}</div>
+  }
+
+  <!-- ── Table Card ── -->
+  <div class="table-card">
+    @if (isLoading()) {
+    <div class="table-loading">
+      <span class="spinner"></span> Loading orders...
+    </div>
+    } @else {
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th class="actions-header">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (orders().length === 0) {
+          <tr>
+            <td colspan="5" class="empty-row">No orders match your criteria.</td>
+          </tr>
+          }
+          @for (order of orders(); track order.orderId) {
+          <tr class="data-row">
+            <td class="font-mono font-medium">#{{ order.orderId }}</td>
+            <td>
+              <div class="customer-cell">
+                <img [src]="getImageUrl(order.image)" [alt]="order.customerName" class="avatar"
+                  (error)="$any($event.target).src='https://ui-avatars.com/api/?name='+order.customerName+'&background=3b82f6&color=fff'" />
+                <div>
+                  <span class="customer-name" title="{{ order.customerName }}">{{ order.customerName.length > 30 ?
+                    (order.customerName | slice:0:30) + '...' : order.customerName }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="meta font-medium">{{ order.totalAmount | currency }}</td>
+            <td>
+              <div class="inline-status-wrapper">
+                <select class="status-badge status-select" [ngClass]="getStatusClass(order.status)"
+                  (change)="onStatusChange(order.orderId, $event)">
+                  <!-- Preselect based on matching text (since order.status is string from grid, but dropdown items have 'text' and 'value') -->
+                  <option [value]="order.status" selected hidden>{{ order.status }}</option>
+                  @for (status of orderStatuses(); track status.value) {
+                  <!-- We only bind value if it changes. The grid API gives the Status as string, but Update API needs ID -->
+                  <option [value]="status.value">{{ status.text }}</option>
+                  }
+                </select>
+
+                <button class="action-btn update-btn" *ngIf="pendingStatusUpdates().has(order.orderId)"
+                  (click)="updateStatus(order.orderId)" [disabled]="isUpdating()" title="Save Status">
+                  @if (isUpdating()) {
+                  <span class="spinner-small"></span>
+                  } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  }
+                </button>
+              </div>
+            </td>
+            <td class="actions-cell">
+              <!-- Placeholder view button, requirements didn't specify edit/view actions for orders yet -->
+              <button class="action-btn view-btn" title="View Order Details" (click)="viewOrderDetails(order.orderId)">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Pagination ── -->
+    @if (totalPages() > 1) {
+    <div class="pagination">
+      <span class="page-info">
+        Page {{ pageNumber() }} of {{ totalPages() }}
+      </span>
+      <div class="page-controls">
+        <button class="page-btn" [disabled]="pageNumber() === 1" (click)="goToPage(1)">«</button>
+        <button class="page-btn" [disabled]="pageNumber() === 1" (click)="goToPage(pageNumber() - 1)">‹</button>
+
+        @for (p of getPageNumbers(); track p) {
+        <button class="page-btn" [class.active]="p === pageNumber()" (click)="goToPage(p)">{{ p }}</button>
+        }
+
+        <button class="page-btn" [disabled]="pageNumber() === totalPages()"
+          (click)="goToPage(pageNumber() + 1)">›</button>
+        <button class="page-btn" [disabled]="pageNumber() === totalPages()" (click)="goToPage(totalPages())">»</button>
+      </div>
+    </div>
+    }
+    }
+  </div>
+
+</div>
+
+<!-- ── Order Details Modal ── -->
+@if (isDetailModalOpen()) {
+<div class="modal-backdrop">
+  <div class="modal-panel detail-modal">
+    <div class="modal-header">
+      <h2>Order Details</h2>
+      <button type="button" class="close-btn" (click)="closeDetailModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body detail-body">
+      @if (isDetailLoading()) {
+      <div class="loading-state">
+        <span class="spinner"></span>
+        <p>Loading details...</p>
+      </div>
+      } @else if (selectedOrderDetail()) {
+      <div class="order-meta-grid">
+        <div class="meta-section">
+          <h3>Customer Information</h3>
+          <div class="customer-profile">
+            <img [src]="getImageUrl(selectedOrderDetail()?.image)" [alt]="selectedOrderDetail()?.customerName"
+              class="detail-avatar"
+              (error)="$any($event.target).src='https://ui-avatars.com/api/?name='+(selectedOrderDetail()?.customerName || '')+'&background=3b82f6&color=fff'">
+            <div>
+              <strong>{{ selectedOrderDetail()?.customerName }}</strong>
+              <div class="meta-text">{{ selectedOrderDetail()?.email }}</div>
+              <div class="meta-text">{{ selectedOrderDetail()?.phone }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-section">
+          <h3>Order Metadata</h3>
+          <div class="meta-row"><span>Order ID:</span> <strong>#{{ selectedOrderDetail()?.orderId }}</strong></div>
+          <div class="meta-row"><span>Date:</span> <strong>{{ selectedOrderDetail()?.orderDate | date:'mediumDate'
+              }}</strong></div>
+          <div class="meta-row"><span>Required By:</span> <strong>{{ selectedOrderDetail()?.requiredDate |
+              date:'mediumDate' }}</strong></div>
+          <div class="meta-row" *ngIf="selectedOrderDetail()?.shippedDate"><span>Shipped:</span> <strong>{{
+              selectedOrderDetail()?.shippedDate | date:'mediumDate' }}</strong></div>
+        </div>
+      </div>
+
+      <h3 class="items-title">Order Items</h3>
+      <div class="items-table-container">
+        <table class="data-grid inner-grid">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th class="text-right">Price</th>
+              <th class="text-right">Qty</th>
+              <th class="text-right">Discount</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of selectedOrderDetail()?.orderItems; track item.itemId) {
+            <tr>
+              <td>{{ item.productName }}</td>
+              <td class="text-right">{{ item.listPrice | currency }}</td>
+              <td class="text-right">{{ item.quantity }}</td>
+              <td class="text-right">{{ item.discount | percent }}</td>
+              <td class="text-right font-medium">{{ (item.listPrice * item.quantity * (1 - item.discount)) | currency }}
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="closeDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ── Toast Notification ── -->
+@for (toast of toasts(); track toast.id) {
+<div class="toast-wrapper">
+  <div class="toast-item" [ngClass]="toast.type">
+    @if(toast.type === 'success') {
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+      class="toast-icon">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+    } @else {
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+      class="toast-icon">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    }
+    <span class="toast-text">{{ toast.text }}</span>
+  </div>
+</div>
+}

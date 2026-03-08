@@ -1,0 +1,74 @@
+<div class="login-container">
+  <!-- Theme Toggle in Corner -->
+  <button class="theme-toggle" (click)="toggleTheme()" aria-label="Toggle Theme">
+    <span class="icon" *ngIf="themeService.isDarkMode()">☀️</span>
+    <span class="icon" *ngIf="!themeService.isDarkMode()">🌙</span>
+  </button>
+
+  <div class="login-card">
+    <div class="logo-container">
+      <div class="logo-icon">🚴</div>
+      <h2>Bike Hub</h2>
+      <p class="subtitle">Log in to manage your inventory and orders</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Error Message -->
+      <div class="error-alert" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉️</span>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email" 
+            placeholder="admin@bikehub.com"
+            [class.invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          >
+        </div>
+        <span class="error-text" *ngIf="loginForm.get('email')?.errors?.['required'] && loginForm.get('email')?.touched">
+          Email is required
+        </span>
+        <span class="error-text" *ngIf="loginForm.get('email')?.errors?.['email'] && loginForm.get('email')?.touched">
+          Please enter a valid email address
+        </span>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input 
+            type="password" 
+            id="password" 
+            formControlName="password" 
+            placeholder="••••••••"
+            [class.invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          >
+        </div>
+        <span class="error-text" *ngIf="loginForm.get('password')?.errors?.['required'] && loginForm.get('password')?.touched">
+          Password is required
+        </span>
+      </div>
+
+      <div class="form-actions">
+        <label class="remember-me">
+          <input type="checkbox">
+          <span>Remember me</span>
+        </label>
+        <a href="#" class="forgot-password">Forgot Password?</a>
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Sign In</span>
+        <span *ngIf="isLoading" class="spinner"></span>
+      </button>
+    </form>
+  </div>
+</div>

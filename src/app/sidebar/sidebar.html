@@ -1,0 +1,50 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">🚴</div>
+      <h2>Bike Hub</h2>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+      <span class="icon">📊</span>
+      <span class="label">Dashboard</span>
+    </a>
+
+    <div class="nav-group" [class.expanded]="isProductsExpanded">
+      <button class="nav-item collapsible" (click)="toggleProducts()" [class.active-group]="isProductsExpanded" [class.active]="router.url.includes('/products')">
+        <span class="icon">🚲</span>
+        <span class="label">Products</span>
+        <span class="chevron" [class.rotated]="isProductsExpanded">▼</span>
+      </button>
+
+      <div class="submenu" *ngIf="isProductsExpanded || layoutService.isSidebarCollapsed()">
+        <a routerLink="/products/brand" routerLinkActive="active" class="sub-nav-item">
+          <span class="sub-label">Brand</span>
+        </a>
+        <a routerLink="/products/category" routerLinkActive="active" class="sub-nav-item">
+          <span class="sub-label">Category</span>
+        </a>
+        <a routerLink="/products/product-items" routerLinkActive="active" class="sub-nav-item">
+          <span class="sub-label">Product Items</span>
+        </a>
+      </div>
+    </div>
+
+    <a routerLink="/customer" routerLinkActive="active" class="nav-item">
+      <span class="icon">👥</span>
+      <span class="label">Customer</span>
+    </a>
+
+    <a routerLink="/orders" routerLinkActive="active" class="nav-item">
+      <span class="icon">📦</span>
+      <span class="label">Orders</span>
+    </a>
+
+    <a routerLink="/user-management" routerLinkActive="active" class="nav-item">
+      <span class="icon">⚙️</span>
+      <span class="label">User Management</span>
+    </a>
+  </nav>
+</aside>

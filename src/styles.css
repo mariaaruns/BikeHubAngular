@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Default Dark Theme Colors */
+  --bg-topbar: #0c0e14;
+  --bg-sidebar: #0c0e14;
+  --bg-main: #0f111a;
+  
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-sidebar-hover: #e2e8f0;
+  
+  --border-color: rgba(255, 255, 255, 0.05);
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --hover-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-active-bg: linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent);
+  --sidebar-group-bg: rgba(255, 255, 255, 0.02);
+  
+  --accent-color: #3b82f6;
+  --accent-secondary: #8b5cf6;
+}
+
+body.light-theme {
+  /* Light Theme Colors */
+  --bg-topbar: #ffffff;
+  --bg-sidebar: #f8fafc;
+  --bg-main: #f1f5f9;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-sidebar-hover: #0f172a;
+  
+  --border-color: rgba(0, 0, 0, 0.08);
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --sidebar-active-bg: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent);
+  --sidebar-group-bg: rgba(0, 0, 0, 0.02);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
