@@ -58,7 +58,8 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 This app is consumed api from another called bikehub.api was developed by .net 9 using minimal api 
 
 
-<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/a32aed30-e311-49c7-ab77-8292792c24e7" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/56119a42-2a9f-4d26-9508-502a452dbb15" />
+
 
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/4d0ca99b-78fd-43b6-8643-2cd6db15e2a5" />
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/32f1fae9-26d8-46ab-885c-993189d047a4" />
