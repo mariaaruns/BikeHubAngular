@@ -67,10 +67,12 @@ This app is consumed api from another called bikehub.api was developed by .net 9
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/f1cae830-a575-4ca4-bd01-87bd5035e1a4" />
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/524f250a-48b7-478d-bdac-ad37169326e8" />
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/0cad0861-fbc0-45e0-b8f5-c4228d2fe563" />
-![Uploading image.png…]()
-
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/e00dac3b-1470-4f38-b897-26c34417ba1a" />
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/dc8aa305-f852-4260-871b-0976d6ae0f65" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/27e8d92c-bf72-41f9-8ec2-9229036df678" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/ed1f000d-6566-4b87-afdd-0c43ad03ec0d" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/79dafc94-5cfd-444a-b72c-5deac3d2bc4d" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/eb8ec8b1-632c-4321-9348-be3d8511a5c8" />
 
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
