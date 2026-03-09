@@ -23,6 +23,12 @@ export const routes: Routes = [
         loadComponent: () => import('./user-management/user-management').then(m => m.UserManagement),
         canActivate: [roleGuard],
         data: { roles: ['Admin'] }   // 👈 Only Admin can access this page
+      },
+      {
+        path: 'user-management/:id/permissions',
+        loadComponent: () => import('./user-management/user-permissions/user-permissions').then(m => m.UserPermissions),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] }
       }
     ]
   }

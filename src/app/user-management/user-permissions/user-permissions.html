@@ -1,0 +1,109 @@
+<div class="page-wrapper">
+  
+  <!-- ── Page Header ── -->
+  <div class="page-header">
+    <div>
+      <div class="header-breadcrumbs">
+        <a class="breadcrumb-link" (click)="goBack()">Users</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Manage Permissions</span>
+      </div>
+      <h1 class="page-title">
+        User Permissions
+      </h1>
+      <span class="page-subtitle">
+        @if (user()) {
+          Managing access for <strong>{{ user()?.userName }}</strong>
+        } @else {
+          Loading user details...
+        }
+      </span>
+    </div>
+
+  </div>
+
+  <!-- ── Error / Loading ── -->
+  @if (errorMessage()) {
+    <div class="alert error">⚠ {{ errorMessage() }}</div>
+  }
+
+  <!-- ── Content ── -->
+  <div class="permissions-container">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <span class="spinner"></span> Loading permissions...
+      </div>
+    } @else {
+      
+      <div class="permissions-grid">
+        @for (group of groupedPolicies(); track group.groupName) {
+          
+          <div class="permission-card">
+            <div class="card-header">
+              <span class="group-emoji">{{ group.emoji }}</span>
+              <h3 class="group-title">{{ group.groupName }} Management</h3>
+            </div>
+            
+            <div class="card-body">
+              <div class="permission-items-list">
+                @for (policy of group.policies; track policy.policyId) {
+                  
+                  <label class="permission-row" [class.active-row]="policy.haspermission">
+                    <div class="checkbox-wrapper">
+                      <input 
+                        type="checkbox" 
+                        [checked]="policy.haspermission" 
+                        class="custom-checkbox" 
+                        (change)="togglePermission(policy.policyId, $event)" 
+                      />
+                    </div>
+                    <div class="policy-details">
+                      <span class="policy-code" [class.active-text]="policy.haspermission">
+                        {{ policy.code }}
+                      </span>
+                      <span class="policy-desc">{{ policy.description }}</span>
+                    </div>
+                  </label>
+                  
+                }
+              </div>
+            </div>
+          </div>
+          
+        }
+      </div>
+      
+    }
+  </div>
+
+  <!-- ── Floating Actions ── -->
+  <div class="floating-toolbar">
+    <button class="cancel-btn" (click)="goBack()" [disabled]="isSubmitting()">Cancel</button>
+    <button class="primary-btn submit-btn" (click)="savePermissions()" [disabled]="isSubmitting() || isLoading()">
+      @if (isSubmitting()) {
+        <span class="spinner-small"></span> Saving...
+      } @else {
+        Save Changes
+      }
+    </button>
+  </div>
+
+  <!-- ── Toast Notification ── -->
+  @if (toastMessage(); as toast) {
+    <div class="toast-wrapper">
+      <div class="toast-item" [ngClass]="toast.type">
+        @if(toast.type === 'success') {
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="toast-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="toast-icon">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        }
+        <span class="toast-text">{{ toast.text }}</span>
+      </div>
+    </div>
+  }
+
+</div>
