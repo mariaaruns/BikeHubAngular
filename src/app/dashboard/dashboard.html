@@ -85,20 +85,46 @@
     </div>
     }
 
-    <!-- ── Sales Bar Chart ── -->
-    <div class="chart-card">
-        <div class="chart-card-header">
-            <div>
-                <h3 class="chart-card-title">Monthly Sales Overview</h3>
-                <span class="chart-card-sub">{{ getSelectedYear() }} — Net Sales Amount</span>
-            </div>
-            @if (isChartLoading()) {
-            <span class="loading-chip">⏳ Loading...</span>
-            }
-        </div>
-        <div class="chart-wrapper">
-            <canvas #salesChart></canvas>
-        </div>
+    <!-- ── Charts Section ── -->
+    <div class="charts-section">
+      <!-- Sales Bar Chart -->
+      <div class="chart-card">
+          <div class="chart-card-header">
+              <div>
+                  <h3 class="chart-card-title">Monthly Sales Overview</h3>
+                  <span class="chart-card-sub">{{ getSelectedYear() }} — Net Sales Amount</span>
+              </div>
+              @if (isChartLoading()) {
+              <span class="loading-chip">⏳ Loading...</span>
+              }
+          </div>
+          <div class="chart-wrapper">
+              <canvas #salesChart></canvas>
+          </div>
+      </div>
+
+      <!-- Yearly Brand Doughnut Chart -->
+      <div class="chart-card">
+          <div class="chart-card-header multi-header">
+              <div>
+                  <h3 class="chart-card-title">Yearly Brand Sales</h3>
+                  <span class="chart-card-sub">Distribution by Order Status</span>
+              </div>
+              <div class="header-actions">
+                  @if (isDoughnutLoading()) {
+                    <span class="loading-chip">⏳ Loading...</span>
+                  }
+                  <select class="chart-dropdown" [ngModel]="selectedOrderStatus()" (ngModelChange)="onOrderStatusChange($event)">
+                    @for (status of orderStatuses(); track status.value) {
+                      <option [value]="status.value">{{ status.text }}</option>
+                    }
+                  </select>
+              </div>
+          </div>
+          <div class="chart-wrapper doughnut-wrapper">
+              <canvas #doughnutChart></canvas>
+          </div>
+      </div>
     </div>
 
 </div>

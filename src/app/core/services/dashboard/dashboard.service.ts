@@ -17,6 +17,13 @@ export interface SalesMonth {
   netAmount: number;
 }
 
+export interface BrandSales {
+  Brand?: string;
+  brand?: string;
+  NetAmount?: number;
+  netAmount?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private http = inject(HttpClient);
@@ -33,6 +40,13 @@ export class DashboardService {
     return this.http.get<ApiResponse<SalesMonth[]>>(
       `${this.baseUrl}/dashboardSalesAmount`,
       { params: { year: year.toString() } }
+    );
+  }
+
+  getBrandYearlySales(year: number, orderStatus: number): Observable<ApiResponse<BrandSales[]>> {
+    return this.http.get<ApiResponse<BrandSales[]>>(
+      `${this.baseUrl}/BrandYearlySales`,
+      { params: { year: year.toString(), orderStatus: orderStatus.toString() } }
     );
   }
 }

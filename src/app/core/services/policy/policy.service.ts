@@ -5,11 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../models/api-response.model';
 import { AuthService } from '../auth/auth.service';
 
-export interface UserPolicy {
-  policyName: string;
-  isAllowed: boolean;
-  [key: string]: any;
-}
+
 
 @Injectable({
   providedIn: 'root'  // Singleton — one instance across the entire app
@@ -20,7 +16,7 @@ export class PolicyService {
   private baseUrl = environment.apiUrl;
 
   // In-memory store — NOT persisted to localStorage
-  private policies = signal<UserPolicy[]>([]);
+  private policies = signal<string[]>([]);
   public isLoaded = signal(false);
 
   /**
@@ -34,10 +30,10 @@ export class PolicyService {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<ApiResponse<UserPolicy[]>>(`${this.baseUrl}/userPolicyCached`)
+        this.http.get<ApiResponse<string[]>>(`${this.baseUrl}/userPolicyCached`)
       );
 
-      if (response.status && response.data) {
+      if (response.status && Array.isArray(response.data)) {
         this.policies.set(response.data);
         this.isLoaded.set(true);
       }
@@ -48,13 +44,11 @@ export class PolicyService {
 
   /** Check if the user has a specific policy */
   hasPolicy(policyName: string): boolean {
-    return this.policies().some(
-      p => p.policyName === policyName && p.isAllowed
-    );
+    return this.policies().includes(policyName);
   }
 
   /** Get all loaded policies */
-  getPolicies(): UserPolicy[] {
+  getPolicies(): string[] {
     return this.policies();
   }
 

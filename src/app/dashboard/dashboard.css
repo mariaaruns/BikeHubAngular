@@ -173,51 +173,109 @@
 .card-badge.green  { background: #d1fae5; color: #065f46; }
 
 /* ── Chart Card ── */
+ /* ── Charts Section ── */
+.charts-section {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
 .chart-card {
-  background: var(--card-bg, #ffffff);
-  border-radius: 1rem;
-  border: 1px solid var(--border-color, #f1f5f9);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  background: white;
+  border-radius: 12px;
   padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-card-header {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.chart-card-header.multi-header {
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.chart-dropdown {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #374151;
+  background-color: #f9fafb;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.chart-dropdown:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .chart-card-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-color, #0f172a);
-  margin: 0 0 0.2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
 }
 
 .chart-card-sub {
-  font-size: 0.78rem;
-  color: var(--text-muted, #64748b);
+  font-size: 0.85rem;
+  color: #6b7280;
 }
 
 .loading-chip {
-  font-size: 0.78rem;
-  color: #2563eb;
   background: #eff6ff;
-  padding: 0.25rem 0.65rem;
+  color: #2563eb;
+  padding: 0.25rem 0.75rem;
   border-radius: 999px;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
 .chart-wrapper {
   position: relative;
-  height: 300px;
+  flex: 1;
+  min-height: 320px;
+  width: 100%;
 }
 
-/* ── Responsive ── */
-@media (max-width: 640px) {
-  .cards-grid { grid-template-columns: 1fr 1fr; }
-  .dashboard-wrapper { padding: 1rem; }
+.doughnut-wrapper {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-wrapper {
+    min-height: 250px;
+  }
 }
 
 @media (max-width: 420px) {

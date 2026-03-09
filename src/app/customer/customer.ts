@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CustomerService, Customer, CustomerDetail, AddCustomerDto, UpdateCustomerDto } from '../core/services/customer/customer.service';
+import { PolicyService } from '../core/services/policy/policy.service';
 
 @Component({
   selector: 'app-customer',
@@ -13,6 +14,7 @@ import { CustomerService, Customer, CustomerDetail, AddCustomerDto, UpdateCustom
 export class CustomerComponent implements OnInit {
   private customerService = inject(CustomerService);
   private fb = inject(FormBuilder);
+  public policyService = inject(PolicyService);
 
   // State
   customers = signal<Customer[]>([]);

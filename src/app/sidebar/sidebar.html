@@ -12,8 +12,9 @@
       <span class="label">Dashboard</span>
     </a>
 
-    <div class="nav-group" [class.expanded]="isProductsExpanded">
-      <button class="nav-item collapsible" (click)="toggleProducts()" [class.active-group]="isProductsExpanded" [class.active]="router.url.includes('/products')">
+    <div *ngIf="policyService.hasPolicy('PRODUCT_VIEW')" class="nav-group" [class.expanded]="isProductsExpanded">
+      <button class="nav-item collapsible" (click)="toggleProducts()" [class.active-group]="isProductsExpanded"
+        [class.active]="router.url.includes('/products')">
         <span class="icon">🚲</span>
         <span class="label">Products</span>
         <span class="chevron" [class.rotated]="isProductsExpanded">▼</span>
@@ -32,17 +33,19 @@
       </div>
     </div>
 
-    <a routerLink="/customer" routerLinkActive="active" class="nav-item">
+    <a *ngIf="policyService.hasPolicy('CUSTOMER_VIEW')" routerLink="/customer" routerLinkActive="active"
+      class="nav-item">
       <span class="icon">👥</span>
       <span class="label">Customer</span>
     </a>
 
-    <a routerLink="/orders" routerLinkActive="active" class="nav-item">
+    <a *ngIf="policyService.hasPolicy('ORDER_VIEW')" routerLink="/orders" routerLinkActive="active" class="nav-item">
       <span class="icon">📦</span>
       <span class="label">Orders</span>
     </a>
 
-    <a routerLink="/user-management" routerLinkActive="active" class="nav-item">
+    <a *ngIf="policyService.hasPolicy('USER_VIEW')" routerLink="/user-management" routerLinkActive="active"
+      class="nav-item">
       <span class="icon">⚙️</span>
       <span class="label">User Management</span>
     </a>
