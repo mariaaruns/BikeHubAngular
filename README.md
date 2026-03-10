@@ -55,7 +55,7 @@ ng e2e
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
 ## Additional Resources
-this app consmed api are developed by .net 9 minimal api 
+This app consumed api are developed by .net 9 minimal api links are given below.
 clone below link 
 https://github.com/mariaaruns/BikeHub.git
 
