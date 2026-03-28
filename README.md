@@ -142,6 +142,14 @@ git clone https://github.com/mariaaruns/BikeHub.git
 ![Settings](https://github.com/user-attachments/assets/eb8ec8b1-632c-4321-9348-be3d8511a5c8)
 
 ---
+### Mechanic Admin Dashboard
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/ef909184-9047-4859-b4f5-c39a9d9de89d" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/d91dd746-982e-49f2-83d1-84f7c9cc55d8" />
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/a15d00d1-377a-4c2a-a33f-f344f78cddd9" />
+
+### Mechanic View Screen
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/993b3f0c-3cb0-4f02-a963-bd4394161ada" />
+
 
 ## 📚 Resources
 
