@@ -150,7 +150,6 @@ git clone https://github.com/mariaaruns/BikeHub.git
 ### Mechanic View Screen
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/993b3f0c-3cb0-4f02-a963-bd4394161ada" />
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/108c8f90-b511-4843-a50d-39f90626fdfd" />
-<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/332575cf-bd55-4531-abb6-ab9f81d6e3f2" />
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/21b71a23-58f9-4d55-9447-fee6469cecb5" />
 
 
