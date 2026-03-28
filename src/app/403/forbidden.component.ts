@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
+import { AuthService } from '../core/services/auth/auth.service';
 @Component({
   selector: 'app-forbidden',
   standalone: true,
@@ -10,9 +10,18 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./forbidden.component.css']
 })
 export class ForbiddenComponent {
-  constructor(private router: Router) {}
+  private authService = inject(AuthService);
+  constructor(private router: Router) { }
 
   goHome() {
-    this.router.navigate(['/dashboard']);
+
+    const userRole = this.authService.getUserRole();
+    if (userRole === 'ADMIN') {
+      this.router.navigate(['/dashboard']);
+    } else if (userRole === 'MECHANIC') {
+      this.router.navigate(['/services']);
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
   }
 }

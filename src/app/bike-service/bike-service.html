@@ -1,0 +1,904 @@
+<div class="page-wrapper">
+
+  <!-- ── Page Header ───────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🔧 Services — Mechanic Dashboard</h1>
+      <p class="page-subtitle">Live overview of mechanic workload and assignments</p>
+    </div>
+  </div>
+
+  <!-- ── Error Alert ───────────────────────────────────────────────── -->
+  <div *ngIf="errorMessage()" class="alert error">{{ errorMessage() }}</div>
+
+  <!-- ── Admin / Staff View ────────────────────────────────────────── -->
+  <ng-container *ngIf="isAdminOrStaff()">
+    <!-- ── Stat Cards ────────────────────────────────────────────────── -->
+    <div class="stats-grid">
+
+      <!-- Total -->
+      <div class="stat-card stat-total">
+        <div class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">
+            <span *ngIf="!isStatsLoading(); else statSkeleton">{{ liveStats()?.totalMechanics ?? 0 }}</span>
+          </div>
+          <div class="stat-label">TOTAL</div>
+        </div>
+        <div class="stat-accent accent-total"></div>
+      </div>
+
+      <!-- Available -->
+      <div class="stat-card stat-available">
+        <div class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">
+            <span *ngIf="!isStatsLoading(); else statSkeleton">{{ liveStats()?.availableMechanics ?? 0 }}</span>
+          </div>
+          <div class="stat-label">AVAILABLE</div>
+        </div>
+        <div class="stat-accent accent-available"></div>
+      </div>
+
+      <!-- Busy -->
+      <div class="stat-card stat-busy">
+        <div class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">
+            <span *ngIf="!isStatsLoading(); else statSkeleton">{{ liveStats()?.busyMechanics ?? 0 }}</span>
+          </div>
+          <div class="stat-label">BUSY</div>
+        </div>
+        <div class="stat-accent accent-busy"></div>
+      </div>
+
+      <!-- Overloaded -->
+      <div class="stat-card stat-overloaded">
+        <div class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">
+            <span *ngIf="!isStatsLoading(); else statSkeleton">{{ liveStats()?.overloadedMechanics ?? 0 }}</span>
+          </div>
+          <div class="stat-label">OVERLOADED</div>
+        </div>
+        <div class="stat-accent accent-overloaded"></div>
+      </div>
+
+      <!-- Jobs Today -->
+      <div class="stat-card stat-jobs">
+        <div class="stat-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">
+            <span *ngIf="!isStatsLoading(); else statSkeleton">{{ liveStats()?.jobsToday ?? 0 }}</span>
+          </div>
+          <div class="stat-label">JOBS TODAY</div>
+        </div>
+        <div class="stat-accent accent-jobs"></div>
+      </div>
+    </div>
+
+    <!-- ── Section Header ─────────────────────────────────────────────── -->
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-bar"></span>
+        All Mechanics — Today's Overview
+      </h2>
+      <div class="view-toggle">
+        <button class="toggle-btn" [class.active]="viewMode() === 'cards'" (click)="setView('cards')">Cards</button>
+        <button class="toggle-btn" [class.active]="viewMode() === 'table'" (click)="setView('table')">Table</button>
+      </div>
+    </div>
+
+    <!-- ── Loading ────────────────────────────────────────────────────── -->
+    <div *ngIf="isMechanicsLoading()" class="table-loading">
+      <div class="spinner"></div>
+      Loading mechanics...
+    </div>
+
+    <!-- ── Cards View ─────────────────────────────────────────────────── -->
+    <div *ngIf="!isMechanicsLoading() && viewMode() === 'cards'" class="mechanic-grid">
+      <div *ngFor="let m of mechanics()" class="mechanic-card">
+
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="avatar-wrap">
+            <div class="avatar-circle" [style.background]="getAvatarColor(m.mechanic)">
+              {{ getInitials(m.mechanic) }}
+            </div>
+            <div class="avatar-dot" [ngClass]="getStatusClass(m.workload, m.active)"></div>
+          </div>
+          <div class="card-name-group">
+            <div class="card-name">{{ m.mechanic }}</div>
+            <div class="card-id">ID #{{ m.mechanicId }}</div>
+          </div>
+          <div class="status-badge" [ngClass]="getStatusClass(m.workload, m.active)">
+            <span class="status-dot"></span>
+            {{ getStatusLabel(m.workload, m.active) }}
+          </div>
+        </div>
+
+        <!-- Mini Stats -->
+        <div class="mini-stats">
+          <div class="mini-stat mini-pending">
+            <div class="mini-value">{{ m.pending }}</div>
+            <div class="mini-label">PENDING</div>
+          </div>
+          <div class="mini-stat mini-active">
+            <div class="mini-value">{{ m.active }}</div>
+            <div class="mini-label">ACTIVE</div>
+          </div>
+          <div class="mini-stat mini-done">
+            <div class="mini-value">{{ m.done }}</div>
+            <div class="mini-label">DONE</div>
+          </div>
+        </div>
+
+        <!-- Workload Bar -->
+        <div class="workload-row">
+          <span class="workload-label">Workload</span>
+          <div class="workload-track">
+            <div class="workload-fill" [ngClass]="getWorkloadClass(m.workload)" [style.width.%]="m.workload"></div>
+          </div>
+          <span class="workload-pct" [ngClass]="getWorkloadClass(m.workload)">{{ m.workload }}%</span>
+        </div>
+
+        <!-- Current Job -->
+        <div *ngIf="m.currentJob" class="current-job">
+          <span class="job-dot"></span>
+          <span class="job-text">{{ m.currentJob }}</span>
+        </div>
+        <div *ngIf="!m.currentJob && m.pending > 0" class="ready-badge">
+          ✓ Ready to assign
+        </div>
+
+        <!-- Actions -->
+        <div class="card-actions">
+          <button class="action-assign" (click)="openAssignDrawer(m)">+ Assign Job</button>
+          <button class="action-view" (click)="openViewJobs(m)">View Jobs</button>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="mechanics().length === 0" class="empty-state">
+        No mechanics found.
+      </div>
+    </div>
+
+    <!-- ── Table View ─────────────────────────────────────────────────── -->
+    <div *ngIf="!isMechanicsLoading() && viewMode() === 'table'" class="table-card">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Mechanic</th>
+              <th>Pending</th>
+              <th>Active</th>
+              <th>Done</th>
+              <th>Workload</th>
+              <th>Status</th>
+              <th>Current Job</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of mechanics(); let i = index" class="data-row">
+              <td class="row-num">{{ i + 1 }}</td>
+              <td>
+                <div class="table-mechanic-cell">
+                  <div class="avatar-circle sm" [style.background]="getAvatarColor(m.mechanic)">
+                    {{ getInitials(m.mechanic) }}
+                  </div>
+                  <div>
+                    <div class="mech-name">{{ m.mechanic }}</div>
+                    <div class="mech-id">#{{ m.mechanicId }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="count-badge pending">{{ m.pending }}</span></td>
+              <td><span class="count-badge active">{{ m.active }}</span></td>
+              <td><span class="count-badge done">{{ m.done }}</span></td>
+              <td>
+                <div class="table-workload">
+                  <div class="workload-track sm">
+                    <div class="workload-fill" [ngClass]="getWorkloadClass(m.workload)" [style.width.%]="m.workload">
+                    </div>
+                  </div>
+                  <span class="workload-pct sm" [ngClass]="getWorkloadClass(m.workload)">{{ m.workload }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="status-badge sm" [ngClass]="getStatusClass(m.workload, m.active)">
+                  {{ getStatusLabel(m.workload, m.active) }}
+                </span>
+              </td>
+              <td class="job-cell">{{ m.currentJob ?? '—' }}</td>
+            </tr>
+            <tr *ngIf="mechanics().length === 0">
+              <td colspan="8" class="empty-row">No mechanics found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- ── Daily Jobs Section ──────────────────────────────────────────── -->
+
+
+    <!-- Section Header with Dropdown -->
+    <div class="section-header">
+      <h2 class="section-title">
+        <span class="section-bar"></span>
+        Daily Service Jobs
+      </h2>
+      <div class="jobs-toolbar">
+        <label class="filter-label">Status</label>
+        <select class="status-select" [value]="selectedStatus()" (change)="onStatusChange($any($event.target).value)">
+          <option value="">All</option>
+          <option *ngFor="let opt of statusOptions()" [value]="opt.value">{{ opt.text }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isDailyJobsLoading()" class="table-loading">
+      <div class="spinner"></div>
+      Loading jobs...
+    </div>
+
+    <!-- Jobs Data Grid -->
+    <div *ngIf="!isDailyJobsLoading()" class="table-card">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Job ID</th>
+              <th>Mechanic</th>
+              <th>Service</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let j of dailyJobs(); let i = index" class="data-row">
+              <td class="row-num">{{ i + 1 }}</td>
+              <td class="job-id-cell">
+                <span class="job-id-badge">#{{ j.jobId }}</span>
+              </td>
+              <td>
+                <div class="table-mechanic-cell">
+                  <div class="avatar-circle sm" [style.background]="getAvatarColor(j.mechanic)">
+                    {{ getInitials(j.mechanic) }}
+                  </div>
+                  <span class="mech-name">{{ j.mechanic }}</span>
+                </div>
+              </td>
+              <td class="service-cell">{{ j.service ?? '—' }}</td>
+              <td class="customer-cell-dj">{{ j.customerName ?? '—' }}</td>
+              <td>
+                <span class="job-status-badge" [ngClass]="getJobStatusClass(j.status)">
+                  {{ j.status ?? 'Unknown' }}
+                </span>
+              </td>
+              <td class="date-cell">{{ formatDate(j.createdAt) }}</td>
+            </tr>
+            <tr *ngIf="dailyJobs().length === 0">
+              <td colspan="7" class="empty-row">No jobs found for the selected status.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- ── Mechanic View ─────────────────────────────────────────────── -->
+<ng-container *ngIf="isMechanic()">
+  <div class="mechanic-view-wrapper">
+    <!-- Stats Row -->
+    <div class="stats-grid mechanic-stats" *ngIf="mechanicSummary() as summary; else statSkeleton">
+
+      <!-- Pending -->
+      <div class="stat-card stat-pending-m">
+        <div class="stat-icon-wrap" style="color: #d97706; background: #fef3c7;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            <path d="M5 2h14M5 22h14" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ summary.pending }}</div>
+          <div class="stat-label">PENDING</div>
+        </div>
+        <div class="stat-accent accent-pending"></div>
+      </div>
+
+      <!-- In Progress -->
+      <div class="stat-card stat-progress-m">
+        <div class="stat-icon-wrap" style="color: #2563eb; background: #eff6ff;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ summary.inProgress }}</div>
+          <div class="stat-label">IN PROGRESS</div>
+        </div>
+        <div class="stat-accent accent-progress"></div>
+      </div>
+
+      <!-- Done Today -->
+      <div class="stat-card stat-done-m">
+        <div class="stat-icon-wrap" style="color: #16a34a; background: #dcfce3;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ summary.doneToday }}</div>
+          <div class="stat-label">DONE TODAY</div>
+        </div>
+        <div class="stat-accent accent-done"></div>
+      </div>
+
+      <!-- This Month -->
+      <div class="stat-card stat-month-m">
+        <div class="stat-icon-wrap" style="color: #dc2626; background: #fee2e2;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+        </div>
+        <div class="stat-body">
+          <div class="stat-value">{{ summary.thisMonth }}</div>
+          <div class="stat-label">THIS MONTH</div>
+        </div>
+        <div class="stat-accent accent-month"></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mechanic-tabs">
+      <button class="m-tab-btn" [class.active]="activeTab() === 'Pending'" (click)="setActiveTab('Pending')">
+        Pending <span class="m-tab-badge">{{ getTabCount('Pending') }}</span>
+      </button>
+      <button class="m-tab-btn" [class.active]="activeTab() === 'Inprogress'" (click)="setActiveTab('Inprogress')">
+        In Progress <span class="m-tab-badge">{{ getTabCount('Inprogress') }}</span>
+      </button>
+      <button class="m-tab-btn" [class.active]="activeTab() === 'Completed'" (click)="setActiveTab('Completed')">
+        Completed <span class="m-tab-badge">{{ getTabCount('Completed') }}</span>
+      </button>
+    </div>
+
+    <!-- Section Title -->
+    <div class="m-section-title">
+      <div class="m-title-bar"></div>
+      <h3 class="m-title-text">{{ activeTab() }} Jobs</h3>
+    </div>
+
+    <!-- Loading Jobs -->
+    <div *ngIf="isMechanicJobsLoading()" class="table-loading">
+      <div class="spinner"></div> Loading your jobs...
+    </div>
+
+    <!-- Jobs Grid -->
+    <div *ngIf="!isMechanicJobsLoading()" class="m-jobs-grid">
+
+      <div *ngIf="getFilteredMechanicJobs().length === 0" class="empty-state">
+        No {{ activeTab() }} jobs assigned right now.
+      </div>
+
+      <div *ngFor="let j of getFilteredMechanicJobs()" class="m-job-card"
+        [ngClass]="getJobStatusClass(j.serviceStatus)">
+
+        <!-- Header -->
+        <div class="m-job-header">
+          <span class="m-job-id">{{ j.jobCardNumber }}</span>
+          <span class="m-job-status-badge">
+            <span class="m-job-dot"></span> {{ j.serviceStatus }}
+          </span>
+        </div>
+
+        <!-- Title & Subtitle -->
+        <div class="m-job-title">{{ j.problemDescription }}</div>
+        <div class="m-job-subtitle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2h-2" />
+            <circle cx="7.5" cy="17.5" r="2.5" />
+            <circle cx="17.5" cy="17.5" r="2.5" />
+          </svg>
+          {{ j.bikeModel }}
+        </div>
+
+        <!-- Customer Box -->
+        <div class="m-customer-box">
+          <div class="m-customer-avatar" [style.background]="getAvatarColor(j.customerName)">
+            {{ getInitials(j.customerName) }}
+          </div>
+          <span class="m-customer-name">{{ j.customerName }}</span>
+          <span class="m-customer-label">Customer</span>
+        </div>
+
+        <!-- Footer Tags -->
+        <div class="m-job-footer" style="display: flex; flex-wrap: wrap; gap: 8px;justify-content:space-between;">
+          <div class="m-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            {{ formatDate(j.createdDate) }}
+          </div>
+
+          <div class="m-tag" *ngIf="j.startTime" style="color:#0284c7; background:#e0f2fe;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {{ formatDate(j.startTime) }}
+          </div>
+
+          <div *ngIf="j.estimatedDuration || (j.serviceStatus === 'Inprogress' && j.startTime)"
+            style="display: flex; justify-content:space-between; width: 100%;">
+            <div class="m-tag" *ngIf="j.estimatedDuration" style="color:#b45309; background:#fef3c7;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M5 22h14" />
+                <path d="M5 2h14" />
+                <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+              </svg>
+              {{ j.estimatedDuration }} mins
+            </div>
+
+            <!-- Active Timer for Inprogress Jobs -->
+            <div class="m-tag" *ngIf="j.serviceStatus === 'Inprogress' && j.startTime"
+              style="color:#ea580c; background:#ffedd5; font-weight:600; display:flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="13" r="8" />
+                <path d="M12 9v4l2 2" />
+                <path d="M5 3L2 6" />
+                <path d="M19 3l3 3" />
+                <path d="M12 2v2" />
+              </svg>
+              <span>{{ getElapsedTime(j.startTime) }}</span>
+            </div>
+
+
+
+            <!-- Actual duration for completed Jobs -->
+            <div class="m-tag" *ngIf="j.serviceStatus === 'Completed' && j.actualDuration"
+              style="color:#059669; background:#d1fae5; font-weight:600; display:flex; align-items:center; gap:4px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="13" r="8" />
+                <path d="M12 9v4l2 2" />
+                <path d="M5 3L2 6" />
+                <path d="M19 3l3 3" />
+                <path d="M12 2v2" />
+              </svg>
+              <span>{{ j.actualDuration }} mins</span>
+            </div>
+          </div>
+
+
+          <div class="m-tag" *ngIf="j.isCompleted && j.completedDate" style="color:#059669; background:#d1fae5;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            {{ formatDate(j.completedDate) }}
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="m-job-actions">
+          <button class="m-btn-primary" *ngIf="j.serviceStatus === 'Pending'" (click)="startJob(j.serviceJobId)">
+            ► Start Job
+          </button>
+          <button class="m-btn-primary" *ngIf="j.serviceStatus === 'Inprogress'"
+            (click)="markCompleted(j.serviceJobId)">
+            ✓ Mark Completed
+          </button>
+          <button class="m-btn-primary" *ngIf="j.serviceStatus === 'Completed'"
+            (click)="openJobDetails(j.serviceJobId)">
+            View Details
+          </button>
+          <button class="m-btn-secondary" *ngIf="j.serviceStatus !== 'Completed'"
+            (click)="openJobDetails(j.serviceJobId)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            Details
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<!-- ── Toast ──────────────────────────────────────────────────────── -->
+<div *ngIf="toastMessage()" class="toast-wrapper">
+  <div class="toast-item" [class.success]="toastMessage()!.type === 'success'"
+    [class.error]="toastMessage()!.type === 'error'">
+    <svg *ngIf="toastMessage()!.type === 'success'" class="toast-icon" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <svg *ngIf="toastMessage()!.type === 'error'" class="toast-icon" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+      <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+    <span class="toast-text">{{ toastMessage()!.text }}</span>
+  </div>
+</div>
+
+<!-- ── Assign Job Drawer ────────────────────────────────────────────── -->
+<div *ngIf="isDrawerOpen()" class="drawer-backdrop" (click)="closeDrawer()"></div>
+
+<div class="drawer-panel" [class.drawer-open]="isDrawerOpen()">
+
+  <!-- Drawer Header -->
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-eyebrow">SERVICE MANAGEMENT</div>
+      <h2 class="drawer-title">Assign <span class="drawer-title-accent">New Job</span></h2>
+    </div>
+    <button class="drawer-close" (click)="closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="drawer-body" *ngIf="drawerMechanic()">
+
+    <!-- Mechanic Info Card -->
+    <div class="drawer-section-label">ASSIGNED MECHANIC</div>
+    <div class="mechanic-info-card">
+      <div class="avatar-circle" [style.background]="getAvatarColor(drawerMechanic()!.mechanic)">
+        {{ getInitials(drawerMechanic()!.mechanic) }}
+      </div>
+      <div class="mechanic-info-text">
+        <div class="mechanic-info-name">{{ drawerMechanic()!.mechanic }}</div>
+        <div class="mechanic-info-meta">ID #{{ drawerMechanic()!.mechanicId }}</div>
+      </div>
+      <div class="mechanic-info-workload">
+        <span class="workload-chip" [ngClass]="getWorkloadClass(drawerMechanic()!.workload)">
+          {{ drawerMechanic()!.workload }}% load
+        </span>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="drawer-divider"></div>
+
+    <!-- Customer Search -->
+    <div class="drawer-section-label">CUSTOMER</div>
+    <div class="cust-search-wrap">
+      <label class="form-label">Search or Select Customer <span class="req">*</span></label>
+      <div class="cust-search-box" [class.open]="isCustomerDropdownOpen()">
+        <svg class="cust-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input class="cust-search-input" placeholder="Type name or phone..." [value]="customerSearch()"
+          (input)="onCustomerSearch($any($event.target).value)" (focus)="isCustomerDropdownOpen.set(true)"
+          (blur)="closeCustomerDropdown()" autocomplete="off" />
+      </div>
+      <div *ngIf="isCustomerDropdownOpen() && filteredCustomers().length > 0" class="cust-dropdown">
+        <div *ngFor="let c of filteredCustomers()" class="cust-option"
+          [class.selected]="selectedCustomer()?.value === c.value" (mousedown)="selectCustomer(c)">
+          <div class="cust-avatar" [style.background]="getAvatarColor(c.text)">{{ getInitials(c.text) }}</div>
+          <span>{{ c.text }}</span>
+        </div>
+      </div>
+      <div *ngIf="isCustomerDropdownOpen() && filteredCustomers().length === 0" class="cust-dropdown">
+        <div class="cust-no-result">No customers found</div>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="drawer-divider"></div>
+
+    <!-- Job Details Form -->
+    <div class="drawer-section-label">JOB DETAILS</div>
+    <form [formGroup]="assignForm" class="assign-form">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Bike Model <span class="req">*</span></label>
+          <input class="form-input" formControlName="bikeModel" placeholder="e.g. Trek FX3 2022"
+            [class.invalid]="f['bikeModel'].invalid && f['bikeModel'].touched" />
+          <span *ngIf="f['bikeModel'].invalid && f['bikeModel'].touched" class="field-error">Required</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bike Number <span class="req">*</span></label>
+          <input class="form-input" formControlName="bikeNumber" placeholder="e.g. KA-01-AB-1234"
+            [class.invalid]="f['bikeNumber'].invalid && f['bikeNumber'].touched" />
+          <span *ngIf="f['bikeNumber'].invalid && f['bikeNumber'].touched" class="field-error">Required</span>
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label class="form-label">Problem Description <span class="req">*</span></label>
+        <textarea class="form-input form-textarea" formControlName="problemDescription"
+          placeholder="Describe the issue in detail..."
+          [class.invalid]="f['problemDescription'].invalid && f['problemDescription'].touched"></textarea>
+        <span *ngIf="f['problemDescription'].invalid && f['problemDescription'].touched"
+          class="field-error">Required</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estimated Cost (₹) <span class="req">*</span></label>
+          <input class="form-input" type="number" min="0" formControlName="estimatedCost" placeholder="0.00"
+            [class.invalid]="f['estimatedCost'].invalid && f['estimatedCost'].touched" />
+          <span *ngIf="f['estimatedCost'].invalid && f['estimatedCost'].touched" class="field-error">Required</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Final Cost (₹) <span class="req">*</span></label>
+          <input class="form-input" type="number" min="0" formControlName="finalCost" placeholder="0.00"
+            [class.invalid]="f['finalCost'].invalid && f['finalCost'].touched" />
+          <span *ngIf="f['finalCost'].invalid && f['finalCost'].touched" class="field-error">Required</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Estimated Duration <span class="req">*</span></label>
+        <div class="duration-wrap">
+          <div class="duration-field">
+            <input class="form-input duration-input" type="number" min="0" formControlName="durationHours"
+              placeholder="0" [class.invalid]="f['durationHours'].invalid && f['durationHours'].touched" />
+            <span class="duration-unit">hrs</span>
+          </div>
+          <span class="duration-sep">:</span>
+          <div class="duration-field">
+            <input class="form-input duration-input" type="number" min="0" max="59" formControlName="durationMinutes"
+              placeholder="0" [class.invalid]="f['durationMinutes'].invalid && f['durationMinutes'].touched" />
+            <span class="duration-unit">min</span>
+          </div>
+          <div class="duration-preview" *ngIf="totalMinutes() > 0">
+            = {{ totalMinutes() }} min
+            <span *ngIf="totalMinutes() >= 60">&nbsp;({{ totalMinutes() / 60 | number:'1.0-1' }}h)</span>
+          </div>
+        </div>
+        <span *ngIf="f['durationMinutes'].invalid && f['durationMinutes'].touched" class="field-error">Minutes must be
+          0–59</span>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Drawer Footer -->
+  <div class="drawer-footer">
+    <button class="drawer-cancel-btn" (click)="closeDrawer()" [disabled]="isDrawerSubmitting()">Cancel</button>
+    <button class="drawer-submit-btn" (click)="submitAssign()" [disabled]="isDrawerSubmitting()">
+      <span *ngIf="isDrawerSubmitting()" class="spinner-sm"></span>
+      <svg *ngIf="!isDrawerSubmitting()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="width:16px;height:16px">
+        <polyline points="13 2 13 9 20 9" />
+        <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+      </svg>
+      {{ isDrawerSubmitting() ? 'Assigning...' : 'Assign Job to Mechanic' }}
+    </button>
+  </div>
+</div>
+
+<!-- ── View Jobs Modal ─────────────────────────────────────────────── -->
+<div *ngIf="isJobsModalOpen()" class="jobs-modal-backdrop" (click)="closeViewJobs()"></div>
+
+<div *ngIf="isJobsModalOpen()" class="jobs-modal-panel" role="dialog">
+
+  <!-- Modal Header -->
+  <div class="jobs-modal-header">
+    <div class="jobs-modal-title-group">
+      <div *ngIf="jobsMechanic()" class="jobs-modal-avatar"
+        [style.background]="getAvatarColor(jobsMechanic()!.mechanic)">
+        {{ getInitials(jobsMechanic()!.mechanic) }}
+      </div>
+      <div>
+        <div class="jobs-modal-eyebrow">ASSIGNED JOBS</div>
+        <h3 class="jobs-modal-title">{{ jobsMechanic()?.mechanic }}</h3>
+      </div>
+    </div>
+    <button class="jobs-modal-close" (click)="closeViewJobs()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isJobsLoading()" class="jobs-modal-loading">
+    <div class="spinner"></div> Loading jobs...
+  </div>
+
+  <!-- Grid -->
+  <div *ngIf="!isJobsLoading()" class="jobs-modal-body">
+
+    <!-- Empty state -->
+    <div *ngIf="assignedJobs().length === 0" class="jobs-modal-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+      </svg>
+      <p>No jobs assigned yet.</p>
+    </div>
+
+    <!-- Job table -->
+    <div *ngIf="assignedJobs().length > 0" class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Job ID</th>
+            <th>Bike</th>
+            <th>Customer</th>
+            <th>Problem</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let j of assignedJobs()" class="data-row">
+            <td class="job-id-cell">
+              <span class="job-id-badge">{{ j.jobCardNumber }}</span>
+            </td>
+            <td class="service-cell">
+              <div class="flex-align-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="width:14px;height:14px;color:#94a3b8">
+                  <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2h-2" />
+                  <circle cx="7.5" cy="17.5" r="2.5" />
+                  <circle cx="17.5" cy="17.5" r="2.5" />
+                </svg>
+                {{ j.bikeModel }}
+              </div>
+            </td>
+            <td class="customer-cell-dj">
+              <div class="flex-align-center gap-2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="width:14px;height:14px;color:#94a3b8">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {{ j.customerName }}
+              </div>
+            </td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+              title="{{ j.problemDescription }}">
+              {{ j.problemDescription }}
+            </td>
+            <td>
+              <span class="job-status-badge" [ngClass]="getJobStatusClass(j.serviceStatus)">
+                {{ j.serviceStatus }}
+              </span>
+            </td>
+            <td class="date-cell">
+              {{ formatDate(j.createdDate) }}
+              <div *ngIf="j.isCompleted && j.completedDate" style="color:#059669; font-size: 0.72rem; margin-top:2px;">
+                ✓ {{ formatDate(j.completedDate!) }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── Mechanic Job Details Modal ──────────────────────────────────── -->
+<div *ngIf="isJobDetailsModalOpen()" class="jobs-modal-backdrop" (click)="closeJobDetails()"></div>
+
+<div *ngIf="isJobDetailsModalOpen()" class="jobs-modal-panel" role="dialog">
+  <div class="jobs-modal-header">
+    <div class="jobs-modal-title-group">
+      <div>
+        <div class="jobs-modal-eyebrow">JOB DETAILS</div>
+        <h3 class="jobs-modal-title">#{{ selectedJobDetails()?.jobId || 'Loading...' }}</h3>
+      </div>
+    </div>
+    <button class="jobs-modal-close" (click)="closeJobDetails()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  <div *ngIf="jobDetailsLoading()" class="jobs-modal-loading">
+    <div class="spinner"></div> Loading details...
+  </div>
+
+  <div *ngIf="!jobDetailsLoading() && selectedJobDetails() as d" class="jobs-modal-body"
+    style="padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+
+    <!-- Status & Basic Info -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h4 style="margin: 0 0 4px 0; font-size: 1.1rem; color: #0f172a;">{{ d.service || 'Diagnostic/General Service'
+          }}</h4>
+        <div style="color: #64748b; font-size: 0.875rem;">{{ d.bikeModel || 'Unknown Model' }} ({{ d.bikeNumber ||
+          'Unknown' }})</div>
+      </div>
+      <span class="job-status-badge" [ngClass]="getJobStatusClass(d.status)">{{ d.status }}</span>
+    </div>
+
+    <!-- Customer Info -->
+    <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+      <h5
+        style="margin: 0 0 12px 0; font-size: 0.75rem; font-weight: 700; color: #64748b; letter-spacing: 0.05em; text-transform: uppercase;">
+        Customer Details</h5>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">
+        <div><strong>Name:</strong> {{ d.customerName || '—' }}</div>
+        <div><strong>Email:</strong> {{ d.email || '—' }}</div>
+        <div style="grid-column: span 2;"><strong>Address:</strong> {{ d.address || '—' }}</div>
+      </div>
+    </div>
+
+    <!-- Job Info -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.9rem; color: #334155;">
+      <div><strong>Mechanic:</strong> {{ d.mechanic || '—' }}</div>
+      <div><strong>Created By:</strong> {{ d.createdBy || '—' }}</div>
+
+      <div><strong>Assigned:</strong> {{ formatDate(d.assignedDate!) || '—' }}</div>
+      <div><strong>Start Time:</strong> {{ formatDate(d.startTime!) || '—' }}</div>
+
+      <div><strong>Created:</strong> {{ formatDate(d.createdAt!) || '—' }}</div>
+      <div><strong>Completed:</strong> {{ formatDate(d.completedDate!) || '—' }}</div>
+
+      <div><strong>Est. Cost:</strong> {{ d.estimatedCost ? ('₹' + d.estimatedCost) : '—' }}</div>
+      <div><strong>Final Cost:</strong> {{ d.finalCost ? ('₹' + d.finalCost) : '—' }}</div>
+
+      <div style="grid-column: span 2;"><strong>Est. Duration:</strong> {{ d.estimatedDuration ? d.estimatedDuration + '
+        mins' : '—' }}</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Skeleton template -->
+<ng-template #statSkeleton><span class="skeleton-val"></span></ng-template>

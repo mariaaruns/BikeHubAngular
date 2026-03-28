@@ -28,26 +28,22 @@ export class CategoryService {
     if (categoryNameFilter) {
       params = params.set('CategoryNameFilter', categoryNameFilter);
     }
-    return this.http.get<ApiResponse<Category[]>>(`${this.baseUrl}/GetCategory`, { params });
+    return this.http.get<ApiResponse<Category[]>>(`${this.baseUrl}/Category`, { params });
   }
 
   getCategoryById(id: number): Observable<ApiResponse<Category>> {
-    return this.http.get<ApiResponse<Category>>(`${this.baseUrl}/GetCategoryById`, {
-      params: { Id: id.toString() }
-    });
+    return this.http.get<ApiResponse<Category>>(`${this.baseUrl}/Category/${id}`);
   }
 
   addCategory(payload: AddCategoryDto): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/categoryAdd`, payload);
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/category-Add`, payload);
   }
 
   updateCategory(payload: UpdateCategoryDto): Observable<ApiResponse<string>> {
-    return this.http.put<ApiResponse<string>>(`${this.baseUrl}/UpdateCategory`, payload);
+    return this.http.put<ApiResponse<string>>(`${this.baseUrl}/category`, payload);
   }
 
   deleteCategory(id: number): Observable<ApiResponse<string>> {
-    return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/DeleteCategory`, {
-      body: { id }
-    });
+    return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/category/${id}`);
   }
 }

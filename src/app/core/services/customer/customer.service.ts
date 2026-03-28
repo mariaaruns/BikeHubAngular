@@ -57,35 +57,34 @@ export class CustomerService {
 
   getAll(filter: CustomerFilter): Observable<ApiResponse<PagedResult<Customer>>> {
     return this.http.post<ApiResponse<PagedResult<Customer>>>(
-      `${this.baseUrl}/GetAllCustomers`,
+      `${this.baseUrl}/customers`,
       filter
     );
   }
 
   getById(id: number): Observable<ApiResponse<CustomerDetail>> {
     return this.http.get<ApiResponse<CustomerDetail>>(
-      `${this.baseUrl}/GetCustomerById`,
-      { params: { Id: id.toString() } }
+      `${this.baseUrl}/customers/${id}`
     );
   }
 
   addCustomer(payload: AddCustomerDto): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(
-      `${this.baseUrl}/AddCustomer`,
+      `${this.baseUrl}/customers-new`,
       payload
     );
   }
 
   updateCustomer(payload: UpdateCustomerDto): Observable<ApiResponse<boolean>> {
     return this.http.put<ApiResponse<boolean>>(
-      `${this.baseUrl}/UpdateCustomer`,
+      `${this.baseUrl}/customers`,
       payload
     );
   }
 
   deactivateCustomer(id: number): Observable<ApiResponse<string>> {
     return this.http.delete<ApiResponse<string>>(
-      `${this.baseUrl}/DeActivateCustomer/${id}`
+      `${this.baseUrl}/customers/${id}`
     );
   }
 }

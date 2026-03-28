@@ -31,24 +31,22 @@ export class BrandService {
     if (brandNameFilter) {
       params = params.set('BrandNameFilter', brandNameFilter);
     }
-    return this.http.get<ApiResponse<Brand[]>>(`${this.baseUrl}/GetAllBrand`, { params });
+    return this.http.get<ApiResponse<Brand[]>>(`${this.baseUrl}/Brands`, { params });
   }
 
   getById(id: number): Observable<ApiResponse<Brand>> {
-    return this.http.get<ApiResponse<Brand>>(`${this.baseUrl}/getbrandById`, {
-      params: { Id: id.toString() }
-    });
+    return this.http.get<ApiResponse<Brand>>(`${this.baseUrl}/brands/${id}`);
   }
 
   addBrand(payload: AddBrandDto): Observable<ApiResponse<string>> {
-    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/AddBrand`, payload);
+    return this.http.post<ApiResponse<string>>(`${this.baseUrl}/brands`, payload);
   }
 
   updateBrand(payload: UpdateBrandDto): Observable<ApiResponse<string>> {
-    return this.http.put<ApiResponse<string>>(`${this.baseUrl}/updateBrand`, payload);
+    return this.http.put<ApiResponse<string>>(`${this.baseUrl}/brands`, payload);
   }
 
   deleteBrand(id: number): Observable<ApiResponse<string>> {
-    return this.http.put<ApiResponse<string>>(`${this.baseUrl}/DeleteBrandById`, { id });
+    return this.http.delete<ApiResponse<string>>(`${this.baseUrl}/brands-deactivate/${id}`);
   }
 }

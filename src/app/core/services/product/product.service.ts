@@ -69,21 +69,21 @@ export class ProductService {
 
   addProduct(payload: AddProductDto): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(
-      `${this.baseUrl}/products/add`,
+      `${this.baseUrl}/products-new`,
       payload
     );
   }
 
   updateProduct(payload: UpdateProductDto): Observable<ApiResponse<boolean>> {
     return this.http.put<ApiResponse<boolean>>(
-      `${this.baseUrl}/products/update`,
+      `${this.baseUrl}/products`,
       payload
     );
   }
 
   deactivateProduct(id: number): Observable<ApiResponse<string>> {
     return this.http.patch<ApiResponse<string>>(
-      `${this.baseUrl}/products/${id}/deactivate`,
+      `${this.baseUrl}/products/${id}`,
       {}
     );
   }

@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../core/services/auth/auth.service';
 import { ThemeService } from '../core/services/theme/theme';
+import { PolicyService } from '../core/services/policy/policy.service';
 
 @Component({
   selector: 'app-login',
@@ -17,6 +18,7 @@ export class Login {
   private authService = inject(AuthService);
   private router = inject(Router);
   public themeService = inject(ThemeService);
+  private policyService = inject(PolicyService);
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -43,11 +45,21 @@ export class Login {
       };
 
       this.authService.login(payload).subscribe({
-        next: (res) => {
+        next: async (res) => {
           this.isLoading = false;
           if (res.status) {
+            // Load policies into memory before navigating
+            await this.policyService.loadPolicies();
             // Route into the dashboard on successful login
-            this.router.navigate(['/dashboard']);
+            const userRole = this.authService.getUserRole();
+            if (userRole === 'ADMIN') {
+              this.router.navigate(['/dashboard']);
+            } else if (userRole === 'MECHANIC') {
+              this.router.navigate(['/services']);
+            } else {
+              this.router.navigate(['/dashboard']);
+            }
+
           } else {
             // Backend handled failure safely but returned false status
             this.errorMessage = res.message || 'Login failed. Please check your credentials.';

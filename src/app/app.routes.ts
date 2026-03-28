@@ -13,7 +13,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./dashboard/dashboard').then(m => m.Dashboard) },
+      {
+        path: 'dashboard', loadComponent: () => import('./dashboard/dashboard').then(m => m.Dashboard),
+        canActivate: [policyGuard],
+        data: { policy: 'DASHBOARD_VIEW' }
+      },
       {
         path: 'products/brand',
         loadComponent: () => import('./products/brand/brand').then(m => m.Brand),
@@ -55,6 +59,10 @@ export const routes: Routes = [
         loadComponent: () => import('./user-management/user-permissions/user-permissions').then(m => m.UserPermissions),
         canActivate: [roleGuard],
         data: { roles: ['Admin'], policy: 'USER_VIEW' }
+      },
+      {
+        path: 'services',
+        loadComponent: () => import('./bike-service/bike-service').then(m => m.BikeService)
       }
     ]
   }

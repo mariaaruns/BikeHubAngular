@@ -31,21 +31,21 @@ export class DashboardService {
 
   getCounts(date: string): Observable<ApiResponse<DashboardCount>> {
     return this.http.get<ApiResponse<DashboardCount>>(
-      `${this.baseUrl}/getcount`,
+      `${this.baseUrl}/dashboards/summary`,
       { params: { date } }
     );
   }
 
   getSalesAmount(year: number): Observable<ApiResponse<SalesMonth[]>> {
     return this.http.get<ApiResponse<SalesMonth[]>>(
-      `${this.baseUrl}/dashboardSalesAmount`,
+      `${this.baseUrl}/dashboards/sales-revenue`,
       { params: { year: year.toString() } }
     );
   }
 
   getBrandYearlySales(year: number, orderStatus: number): Observable<ApiResponse<BrandSales[]>> {
     return this.http.get<ApiResponse<BrandSales[]>>(
-      `${this.baseUrl}/BrandYearlySales`,
+      `${this.baseUrl}/dashboards/brand-performance`,
       { params: { year: year.toString(), orderStatus: orderStatus.toString() } }
     );
   }

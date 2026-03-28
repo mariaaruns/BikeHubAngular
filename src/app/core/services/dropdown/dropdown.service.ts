@@ -9,14 +9,27 @@ export interface DropdownItem {
   text: string;
 }
 
+export interface productStockSummaries {
+  productId: number;
+  productName: string;
+  stockQty: number;
+  price: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DropdownService {
   private http = inject(HttpClient);
   private baseUrl = environment.apiUrl;
 
-  getDropdown(type: 'category' | 'brand' | 'orderstatus'): Observable<ApiResponse<DropdownItem[]>> {
+  getDropdown(type: 'category' | 'brand' | 'orderstatus' | 'servicestatus' | 'customer'): Observable<ApiResponse<DropdownItem[]>> {
     return this.http.get<ApiResponse<DropdownItem[]>>(`${this.baseUrl}/Dropdown`, {
       params: { type }
+    });
+  }
+
+  getProductStockSummaries(brandId: number, categoryId: number): Observable<ApiResponse<productStockSummaries[]>> {
+    return this.http.get<ApiResponse<productStockSummaries[]>>(`${this.baseUrl}/products/stock-summaries`, {
+      params: { brandId, categoryId }
     });
   }
 }

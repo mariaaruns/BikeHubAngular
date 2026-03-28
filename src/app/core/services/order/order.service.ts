@@ -64,14 +64,14 @@ export class OrderService {
 
   updateOrderStatus(payload: { orderId: number; orderStatusId: number }): Observable<ApiResponse<boolean>> {
     return this.http.put<ApiResponse<boolean>>(
-      `${this.baseUrl}/UpdateOrderStatus`,
+      `${this.baseUrl}/orders/change-status`,
       payload
     );
   }
 
   getOrderDetail(orderId: number): Observable<ApiResponse<OrderDetail>> {
     return this.http.get<ApiResponse<OrderDetail>>(
-      `${this.baseUrl}/orderDetailWithItems?id=${orderId}`
+      `${this.baseUrl}/orders/${orderId}/full-details`
     );
   }
 }

@@ -7,7 +7,8 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+    <a *ngIf="policyService.hasPolicy('DASHBOARD_VIEW')" routerLink="/dashboard" routerLinkActive="active"
+      class="nav-item">
       <span class="icon">📊</span>
       <span class="label">Dashboard</span>
     </a>
@@ -43,11 +44,16 @@
       <span class="icon">📦</span>
       <span class="label">Orders</span>
     </a>
-
+    <a routerLink="/services" routerLinkActive="active" class="nav-item">
+      <span class="icon">🔧</span>
+      <span class="label">Services</span>
+    </a>
     <a *ngIf="policyService.hasPolicy('USER_VIEW')" routerLink="/user-management" routerLinkActive="active"
       class="nav-item">
       <span class="icon">⚙️</span>
       <span class="label">User Management</span>
     </a>
+
+
   </nav>
 </aside>
