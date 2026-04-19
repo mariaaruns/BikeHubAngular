@@ -152,6 +152,12 @@ git clone https://github.com/mariaaruns/BikeHub.git
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/108c8f90-b511-4843-a50d-39f90626fdfd" />
 <img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/21b71a23-58f9-4d55-9447-fee6469cecb5" />
 
+### Customer gets notification via email once Bike service job completed ###
+<img width="1346" height="692" alt="image" src="https://github.com/user-attachments/assets/e0716f06-a255-4455-b6cc-7b9ad3443293" />
+
+### Customer gets notification via email once Bike order is ready to delivery ###
+<img width="1329" height="725" alt="image" src="https://github.com/user-attachments/assets/57c0c040-56b6-4468-a4a7-e8e7cf5b03d1" />
+
 
 ## 📚 Resources
 
