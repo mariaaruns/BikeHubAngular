@@ -165,6 +165,9 @@ git clone https://github.com/mariaaruns/BikeHub.git
 ### Customer gets notification via email once Bike order is ready to delivery ###
 <img width="1329" height="725" alt="image" src="https://github.com/user-attachments/assets/57c0c040-56b6-4468-a4a7-e8e7cf5b03d1" />
 
+### Report Analytics ###
+<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/2d7c9465-6a69-4a08-8b1d-9968a9c57fd7" />
+
 
 ## 📚 Resources
 
