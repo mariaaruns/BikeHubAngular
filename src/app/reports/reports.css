@@ -1,0 +1,340 @@
+/* Variables & Theme */
+:host {
+  --primary-color: #2e8b57;
+  /* Sea Green */
+  --primary-light: #e6f4ea;
+  --text-dark: #333333;
+  --text-muted: #666666;
+  --bg-color: #f9fbfd;
+  --white: #ffffff;
+  --border-color: #eaeaea;
+  --error-color: #d9534f;
+  --transition-speed: 0.3s;
+  --font-family: 'Inter', 'Roboto', sans-serif;
+
+  display: block;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: var(--bg-color);
+  font-family: var(--font-family);
+}
+
+/* Container */
+.reports-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header Section */
+.reports-header-section {
+  margin-bottom: 2rem;
+}
+
+.reports-header-section h1 {
+  font-size: 1.75rem;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.reports-header-section p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* Content Layout */
+.reports-content-section {
+  display: flex;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  min-height: 600px;
+}
+
+/* Left Sidebar */
+.reports-sidebar {
+  width: 300px;
+  border-right: 1px solid var(--border-color);
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  padding: 0 1.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.report-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.report-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease;
+  border-left: 4px solid transparent;
+}
+
+.report-item:hover {
+  background-color: #fdfdfd;
+}
+
+.report-item.active {
+  background-color: var(--primary-light);
+  border-left-color: var(--primary-color);
+}
+
+.report-icon-wrapper {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.report-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.report-name {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.report-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.report-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+}
+
+.check-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Main Content Area */
+.reports-main {
+  flex: 1;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main Header inside Right Column */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.main-title-container {
+  display: flex;
+  align-items: center;
+}
+
+.main-icon {
+  font-size: 2.5rem;
+  margin-right: 1rem;
+  opacity: 0.8;
+}
+
+.main-title-info h2 {
+  font-size: 1.5rem;
+  color: var(--text-dark);
+  margin: 0 0 0.2rem 0;
+}
+
+.main-title-info p {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.required-badge {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Form Styles */
+.report-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.form-row {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-control {
+  padding: 0.75rem 1rem;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text-dark);
+  background-color: var(--white);
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.1);
+}
+
+.error-text {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+/* Info Box */
+.info-box {
+  display: flex;
+  align-items: center;
+  background-color: #f0f7ff;
+  border: 1px solid #cce4ff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  color: #0056b3;
+}
+
+.info-icon {
+  margin-right: 0.8rem;
+  font-size: 1.2rem;
+}
+
+.info-box p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Form Footer */
+.form-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.footer-msg {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-download {
+  display: flex;
+  align-items: center;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-speed) ease, transform 0.1s ease;
+  box-shadow: 0 4px 10px rgba(46, 139, 87, 0.2);
+}
+
+.btn-download:hover:not([disabled]) {
+  background-color: #246d44;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(46, 139, 87, 0.3);
+}
+
+.btn-download:disabled {
+  background-color: #a3d4b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-icon {
+  margin-right: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .reports-content-section {
+    flex-direction: column;
+  }
+
+  .reports-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+}

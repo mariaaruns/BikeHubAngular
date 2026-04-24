@@ -1,0 +1,106 @@
+<div class="reports-container">
+  <div class="reports-header-section">
+    <h1>Report Analytics</h1>
+    <p>Pick a report on the left, fill in the fields, then download.</p>
+  </div>
+
+  <div class="reports-content-section">
+    <!-- Left Sidebar for Report List -->
+    <div class="reports-sidebar">
+      <div class="sidebar-title">Reports</div>
+      <ul class="report-list">
+        <li *ngFor="let report of reportsList" 
+            class="report-item" 
+            [class.active]="selectedReport.id === report.id"
+            (click)="selectReport(report)">
+          <div class="report-icon-wrapper">
+            <span class="report-icon">{{ report.icon }}</span>
+          </div>
+          <div class="report-info">
+            <span class="report-name">{{ report.name }}</span>
+            <span class="report-desc">{{ report.description }}</span>
+          </div>
+          <div class="report-check" *ngIf="selectedReport.id === report.id">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="check-icon">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content Area for the Form -->
+    <div class="reports-main">
+      <div class="main-header">
+        <div class="main-title-container">
+          <div class="main-icon">{{ selectedReport.icon }}</div>
+          <div class="main-title-info">
+            <h2>{{ selectedReport.name }}</h2>
+            <p>{{ selectedReport.description }}</p>
+          </div>
+        </div>
+        <div class="required-badge" *ngIf="selectedReport.requiresDates || selectedReport.requiresMonth">
+          Required fields
+        </div>
+      </div>
+
+      <form [formGroup]="reportForm" (ngSubmit)="generateReport()" class="report-form">
+        <!-- Date Inputs Container -->
+        <div class="form-row date-inputs" *ngIf="selectedReport.requiresDates">
+          <div class="form-group">
+            <label for="fromDate">From date</label>
+            <input type="date" id="fromDate" formControlName="fromDate" class="form-control" />
+            <div class="error-text" *ngIf="reportForm.get('fromDate')?.invalid && reportForm.get('fromDate')?.touched">
+              From date is required
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="toDate">To date</label>
+            <input type="date" id="toDate" formControlName="toDate" class="form-control" />
+            <div class="error-text" *ngIf="reportForm.get('toDate')?.invalid && reportForm.get('toDate')?.touched">
+              To date is required
+            </div>
+          </div>
+        </div>
+
+        <!-- Month Input Container -->
+        <div class="form-row month-input" *ngIf="selectedReport.requiresMonth">
+          <div class="form-group">
+            <label for="month">Month</label>
+            <input type="month" id="month" formControlName="month" class="form-control" />
+            <div class="error-text" *ngIf="reportForm.get('month')?.invalid && reportForm.get('month')?.touched">
+              Month is required
+            </div>
+          </div>
+        </div>
+
+        <!-- No Inputs Needed Container -->
+        <div class="form-message" *ngIf="!selectedReport.requiresDates && !selectedReport.requiresMonth">
+          <div class="info-box">
+            <span class="info-icon">ℹ️</span>
+            <p>No additional fields are required for this report. You can directly generate it.</p>
+          </div>
+        </div>
+
+        <!-- Form Footer (Message + Button) -->
+        <div class="form-footer">
+          <p class="footer-msg" *ngIf="selectedReport.requiresDates || selectedReport.requiresMonth">
+            All fields are required to generate the report.
+          </p>
+          <div class="form-actions">
+            <button type="submit" class="btn-download" [disabled]="isLoading">
+              <span class="btn-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </span>
+              {{ isLoading ? 'Generating...' : 'Download report' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
