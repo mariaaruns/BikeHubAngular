@@ -76,6 +76,30 @@ export interface JobDetails {
   address: string;
 }
 
+export interface ServiceItem {
+  serviceItemId: number;
+  partId: number;
+  partName: string;
+  qty: number;
+  totalCost: number;
+  createdAt: string;
+}
+
+export interface PartItem {
+  partId: number;
+  categoryId: number;
+  partName: string;
+  price: number;
+}
+
+export interface AddServiceItemPayload {
+  serviceJobId: number;
+  partId: number;
+  qty: number;
+  total: number;
+  createdAt: string;
+}
+
 export interface AssignJobPayload {
   customerId: number;
   bikeModel: string;
@@ -154,5 +178,17 @@ export class MechanicService {
 
   completeJob(jobId: number): Observable<ApiResponse<string>> {
     return this.http.patch<ApiResponse<string>>(`${this.baseUrl}/services/complete-job/${jobId}`, {});
+  }
+
+  getServiceItems(jobId: number): Observable<ApiResponse<ServiceItem[]>> {
+    return this.http.get<ApiResponse<ServiceItem[]>>(`${this.baseUrl}/services/items/${jobId}`);
+  }
+
+  getAllParts(): Observable<ApiResponse<PartItem[]>> {
+    return this.http.get<ApiResponse<PartItem[]>>(`${this.baseUrl}/services/parts`);
+  }
+
+  addServiceItem(payload: AddServiceItemPayload): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.baseUrl}/services/items-add`, payload);
   }
 }

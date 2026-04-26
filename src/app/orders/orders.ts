@@ -1,19 +1,24 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { OrderService, Order, OrderFilter, OrderDetail } from '../core/services/order/order.service';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { OrderService, Order, OrderFilter, OrderDetail, AddOrderRequest, VerifyPaymentRequest } from '../core/services/order/order.service';
 import { DropdownService, DropdownItem } from '../core/services/dropdown/dropdown.service';
+import { AuthService } from '../core/services/auth/auth.service';
+
+declare var Razorpay: any;
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './orders.html',
   styleUrl: './orders.css',
 })
 export class Orders implements OnInit {
   private orderService = inject(OrderService);
   private dropdownService = inject(DropdownService);
+  private authService = inject(AuthService);
+  private fb = inject(FormBuilder);
 
   // State
   orders = signal<Order[]>([]);
@@ -34,13 +39,49 @@ export class Orders implements OnInit {
   // Dropdowns
   orderStatuses = signal<DropdownItem[]>([]);
 
+  // --- Create Order State ---
+  isCreatingOrder = signal(false);
+  isCompleting = signal(false);
+  createOrderForm!: FormGroup;
+
+  // Customer dropdown
+  customerOptions = signal<DropdownItem[]>([]);
+  customerSearch = signal('');
+  filteredCustomers = signal<DropdownItem[]>([]);
+  isCustomerDropdownOpen = signal(false);
+  selectedCustomer = signal<DropdownItem | null>(null);
+
+  // Product Selection Modal
+  isProductModalOpen = signal(false);
+  availableProducts = signal<any[]>([]); // Using any to avoid importing productStockSummaries for now, or I can import it
+  filteredAvailableProducts = signal<any[]>([]);
+  productSearchText = signal('');
+  brandOptions = signal<DropdownItem[]>([]);
+  categoryOptions = signal<DropdownItem[]>([]);
+  selectedBrandId = signal<number | null>(null);
+  selectedCategoryId = signal<number | null>(null);
+  isProductsLoading = signal(false);
+
+  // Selected Items
+  selectedOrderItems = signal<{ productId: number, productName: string, price: number, qty: number, total: number, stockQty: number }[]>([]);
+
   ngOnInit(): void {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     this.searchStartDate.set(`${year}-${month}`);
 
+    this.searchStartDate.set(`${year}-${month}`);
+
+    this.initCreateOrderForm();
     this.loadDropdowns();
+  }
+
+  initCreateOrderForm(): void {
+    this.createOrderForm = this.fb.group({
+      customerId: ['', Validators.required],
+      requiredDate: ['', Validators.required],
+    });
   }
 
   loadDropdowns(): void {
@@ -55,6 +96,22 @@ export class Orders implements OnInit {
         }
       },
       error: () => this.load() // Load anyway on error
+    });
+
+    // Preload other dropdowns to ensure they're ready when creating an order
+    this.dropdownService.getDropdown('customer').subscribe(res => {
+      if (res.status && res.data) {
+        this.customerOptions.set(res.data);
+        this.filteredCustomers.set(res.data);
+      }
+    });
+
+    this.dropdownService.getDropdown('brand').subscribe(res => {
+      if (res.status && res.data) this.brandOptions.set(res.data);
+    });
+
+    this.dropdownService.getDropdown('category').subscribe(res => {
+      if (res.status && res.data) this.categoryOptions.set(res.data);
     });
   }
 
@@ -206,6 +263,284 @@ export class Orders implements OnInit {
   closeDetailModal(): void {
     this.isDetailModalOpen.set(false);
     this.selectedOrderDetail.set(null);
+  }
+
+  // --- Create Order Logic ---
+
+  startCreateOrder(): void {
+    this.isCreatingOrder.set(true);
+  }
+
+  cancelCreateOrder(): void {
+    this.isCreatingOrder.set(false);
+    this.createOrderForm.reset();
+    this.selectedCustomer.set(null);
+    this.customerSearch.set('');
+    this.selectedOrderItems.set([]);
+  }
+
+  // Customer Dropdown Logic
+
+  filterCustomers(event: Event): void {
+    const term = (event.target as HTMLInputElement).value.toLowerCase();
+    this.customerSearch.set(term);
+    this.isCustomerDropdownOpen.set(true);
+    if (!term) {
+      this.filteredCustomers.set(this.customerOptions());
+    } else {
+      this.filteredCustomers.set(
+        this.customerOptions().filter(c => c.text.toLowerCase().includes(term))
+      );
+    }
+  }
+
+  selectCustomer(customer: DropdownItem): void {
+    this.selectedCustomer.set(customer);
+    this.customerSearch.set(customer.text);
+    this.createOrderForm.get('customerId')?.setValue(customer.value);
+    this.isCustomerDropdownOpen.set(false);
+  }
+
+  // Product Selection Modal Logic
+  openProductModal(): void {
+    this.isProductModalOpen.set(true);
+    this.productSearchText.set('');
+    this.selectedBrandId.set(null);
+    this.selectedCategoryId.set(null);
+    this.availableProducts.set([]);
+    this.filteredAvailableProducts.set([]);
+  }
+
+  closeProductModal(): void {
+    this.isProductModalOpen.set(false);
+  }
+
+  fetchAvailableProducts(): void {
+    const bId = this.selectedBrandId();
+    const cId = this.selectedCategoryId();
+    if (!bId || !cId) return;
+
+    this.isProductsLoading.set(true);
+    this.dropdownService.getProductStockSummaries(bId, cId).subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          this.availableProducts.set(res.data);
+          this.filterProducts();
+        } else {
+          this.availableProducts.set([]);
+          this.filteredAvailableProducts.set([]);
+        }
+        this.isProductsLoading.set(false);
+      },
+      error: () => {
+        this.isProductsLoading.set(false);
+        this.showToast('Failed to load products.', 'error');
+      }
+    });
+  }
+
+  filterProducts(): void {
+    const term = this.productSearchText().toLowerCase();
+    if (!term) {
+      this.filteredAvailableProducts.set(this.availableProducts());
+    } else {
+      this.filteredAvailableProducts.set(
+        this.availableProducts().filter(p => p.productName.toLowerCase().includes(term))
+      );
+    }
+  }
+
+  addProduct(product: any): void {
+    const items = [...this.selectedOrderItems()];
+    const existing = items.find(i => i.productId === product.productId);
+
+    if (existing) {
+      this.showToast('Product already added to the order.', 'error');
+      return;
+    }
+
+    if (product.stockQty < 1) {
+      this.showToast('Product is out of stock.', 'error');
+      return;
+    }
+
+    items.push({
+      productId: product.productId,
+      productName: product.productName,
+      price: product.price,
+      qty: 1,
+      total: product.price,
+      stockQty: product.stockQty
+    });
+    this.selectedOrderItems.set(items);
+    this.showToast(`${product.productName} added.`, 'success');
+  }
+
+  updateQty(index: number, delta: number): void {
+    const items = [...this.selectedOrderItems()];
+    const newQty = items[index].qty + delta;
+    if (newQty < 1) return;
+
+    if (newQty > items[index].stockQty) {
+      this.showToast(`Cannot add more than available stock (${items[index].stockQty}).`, 'error');
+      return;
+    }
+
+    items[index].qty = newQty;
+    items[index].total = items[index].qty * items[index].price;
+    this.selectedOrderItems.set(items);
+  }
+
+  removeProduct(index: number): void {
+    const items = [...this.selectedOrderItems()];
+    items.splice(index, 1);
+    this.selectedOrderItems.set(items);
+  }
+
+  // Calculations
+  subtotal = computed(() => this.selectedOrderItems().reduce((sum, item) => sum + item.total, 0));
+  tax = computed(() => this.subtotal() * 0.18); // 18% GST
+  totalAmount = computed(() => this.subtotal() + this.tax());
+
+  async completeOrder(): Promise<void> {
+    if (this.createOrderForm.invalid) {
+      this.createOrderForm.markAllAsTouched();
+      this.showToast('Please fill in required fields.', 'error');
+      return;
+    }
+    if (this.selectedOrderItems().length === 0) {
+      this.showToast('Please add at least one product.', 'error');
+      return;
+    }
+
+    const isLoaded = await this.loadRazorpayScript();
+    if (!isLoaded) {
+      this.showToast('Failed to load payment gateway.', 'error');
+      return;
+    }
+
+    const staffId = Number(this.authService.getUserId());
+    if (!staffId || isNaN(staffId)) {
+      this.showToast('Authentication error. Staff ID not found.', 'error');
+      return;
+    }
+
+    const formVal = this.createOrderForm.getRawValue();
+    const payload: AddOrderRequest = {
+      customerId: formVal.customerId,
+      requiredDate: formVal.requiredDate,
+      staffId: staffId,
+      orderItemRequests: this.selectedOrderItems().map(item => ({
+        productId: item.productId,
+        quantity: item.qty,
+        unitPrice: item.price,
+        discount: 0 // Discount is currently set to 0 in the UI
+      }))
+    };
+
+    this.isCompleting.set(true);
+    this.orderService.createOrder(payload).subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          this.initRazorpay(res.data.razorpayOrderId, res.data.orderId, res.data.razorpaySecretKey);
+        } else {
+          this.showToast(res.message || 'Failed to create order.', 'error');
+          this.isCompleting.set(false);
+        }
+      },
+      error: () => {
+        this.showToast('Network error while creating order.', 'error');
+        this.isCompleting.set(false);
+      }
+    });
+  }
+
+  initRazorpay(razorpayOrderId: string, orderId: number, razorpaySecretKey: string): void {
+    const options = {
+      key: razorpaySecretKey,
+      amount: this.totalAmount() * 100,
+      currency: 'INR',
+      name: 'BikeHub',
+      description: 'Order Payment',
+      order_id: razorpayOrderId,
+      config: {
+        display: {
+          blocks: {
+            banks: {
+              name: 'Most Used Methods',
+              instruments: [
+                {
+                  method: 'card',
+                  networks: ['Visa', 'MasterCard']
+                },
+                {
+                  method: 'upi'
+                }
+              ]
+            }
+          },
+          sequence: ['block.banks']
+        }
+      },
+      handler: (response: any) => {
+        this.verifyPayment(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature, orderId);
+      },
+      prefill: {
+        name: this.selectedCustomer()?.text || '',
+      },
+      theme: {
+        color: '#3b82f6'
+      },
+      modal: {
+        ondismiss: () => {
+          this.isCompleting.set(false);
+          this.showToast('Payment was cancelled.', 'error');
+        }
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  }
+
+  verifyPayment(rzpOrderId: string, rzpPaymentId: string, rzpSignature: string, orderId: number): void {
+    const payload: VerifyPaymentRequest = {
+      razorpayOrderId: rzpOrderId,
+      razorpayPaymentId: rzpPaymentId,
+      razorpaySignature: rzpSignature,
+      orderId: orderId
+    };
+
+    this.orderService.verifyPayment(payload).subscribe({
+      next: (res) => {
+        if (res.status) {
+          this.showToast('Order completed and payment verified!', 'success');
+          this.cancelCreateOrder();
+          this.load(); // Refresh grid
+        } else {
+          this.showToast(res.message || 'Payment verification failed.', 'error');
+        }
+        this.isCompleting.set(false);
+      },
+      error: () => {
+        this.showToast('Network error during payment verification.', 'error');
+        this.isCompleting.set(false);
+      }
+    });
+  }
+
+  loadRazorpayScript(): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (typeof Razorpay !== 'undefined') {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   }
 
   showToast(text: string, type: 'success' | 'error'): void {

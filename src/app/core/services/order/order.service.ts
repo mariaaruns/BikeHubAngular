@@ -45,6 +45,33 @@ export interface OrderDetail {
   orderItems: OrderItemDetail[];
 }
 
+export interface OrderItemRequest {
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+}
+
+export interface AddOrderRequest {
+  customerId: number;
+  requiredDate: string;
+  staffId: number;
+  orderItemRequests: OrderItemRequest[];
+}
+
+export interface CreateOrderResponse {
+  razorpayOrderId: string;
+  orderId: number;
+  razorpaySecretKey: string;
+}
+
+export interface VerifyPaymentRequest {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+  orderId: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OrderService {
   private http = inject(HttpClient);
@@ -73,5 +100,13 @@ export class OrderService {
     return this.http.get<ApiResponse<OrderDetail>>(
       `${this.baseUrl}/orders/${orderId}/full-details`
     );
+  }
+
+  createOrder(payload: AddOrderRequest): Observable<ApiResponse<CreateOrderResponse>> {
+    return this.http.post<ApiResponse<CreateOrderResponse>>(`${this.baseUrl}/orders-new`, payload);
+  }
+
+  verifyPayment(payload: VerifyPaymentRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/orders/verify-payment`, payload);
   }
 }

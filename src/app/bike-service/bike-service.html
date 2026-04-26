@@ -534,6 +534,14 @@
             (click)="markCompleted(j.serviceJobId)">
             ✓ Mark Completed
           </button>
+          <button class="m-btn-secondary" *ngIf="j.serviceStatus === 'Inprogress'"
+            (click)="openPartsModal(j.serviceJobId)" title="View Service Items">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Parts
+          </button>
           <button class="m-btn-primary" *ngIf="j.serviceStatus === 'Completed'"
             (click)="openJobDetails(j.serviceJobId)">
             View Details
@@ -897,6 +905,103 @@
         mins' : '—' }}</div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── Parts Modal ─────────────────────────────────────────────────── -->
+<div *ngIf="isPartsModalOpen()" class="jobs-modal-backdrop" (click)="closePartsModal()"></div>
+
+<div *ngIf="isPartsModalOpen()" class="jobs-modal-panel" role="dialog">
+  <div class="jobs-modal-header">
+    <div class="jobs-modal-title-group">
+      <div>
+        <div class="jobs-modal-eyebrow">JOB PARTS</div>
+        <h3 class="jobs-modal-title">Service Items</h3>
+      </div>
+    </div>
+    <button class="jobs-modal-close" (click)="closePartsModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  <div *ngIf="isPartsLoading()" class="jobs-modal-loading">
+    <div class="spinner"></div> Loading parts...
+  </div>
+
+  <div *ngIf="!isPartsLoading()" class="jobs-modal-body">
+    <div *ngIf="serviceItems().length === 0" class="jobs-modal-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+        <line x1="12" y1="22.08" x2="12" y2="12" />
+      </svg>
+      <p>No parts used for this job yet.</p>
+    </div>
+
+    <div *ngIf="serviceItems().length > 0" class="table-scroll" style="max-height: 400px;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Item #</th>
+            <th>Part Name</th>
+            <th>Quantity</th>
+            <th>Total Cost (₹)</th>
+            <th>Added On</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of serviceItems()" class="data-row">
+            <td>{{ item.serviceItemId }}</td>
+            <td style="font-weight: 500; color: #334155;">{{ item.partName }}</td>
+            <td>{{ item.qty }}</td>
+            <td style="font-weight: 600;">₹{{ item.totalCost }}</td>
+            <td class="date-cell">{{ formatDate(item.createdAt) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Add Part Form -->
+    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+      <h4 style="margin: 0 0 12px 0; font-size: 1rem; color: #0f172a;">Add Part</h4>
+      <form [formGroup]="partsForm" (ngSubmit)="submitAddPart()" style="display: grid; grid-template-columns: 2fr 2fr 1fr 1.5fr auto; gap: 12px; align-items: end;">
+        
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Category</label>
+          <select class="form-input" formControlName="categoryId" style="padding: 8px;">
+            <option value="">Select Category</option>
+            <option *ngFor="let cat of partCategories()" [value]="cat.value">{{ cat.text }}</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Part</label>
+          <select class="form-input" formControlName="partId" style="padding: 8px;">
+            <option value="">Select Part</option>
+            <option *ngFor="let p of filteredParts()" [value]="p.partId">{{ p.partName }} - ₹{{ p.price }}</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Qty</label>
+          <input type="number" class="form-input" formControlName="qty" min="1" style="padding: 8px;" />
+        </div>
+
+        <div class="form-group" style="margin: 0;">
+          <label class="form-label" style="font-size: 0.8rem; margin-bottom: 4px;">Total (₹)</label>
+          <input type="number" class="form-input" formControlName="total" readonly style="padding: 8px; background: #f8fafc; cursor: not-allowed;" />
+        </div>
+
+        <button type="submit" class="m-btn-primary" [disabled]="partsForm.invalid || isAddingPart()" style="padding: 8px 16px; height: 38px; display: flex; align-items: center; justify-content: center;">
+          <span *ngIf="isAddingPart()" class="spinner-sm" style="margin-right: 4px;"></span>
+          <span *ngIf="!isAddingPart()">Add</span>
+        </button>
+
+      </form>
+    </div>
   </div>
 </div>
 

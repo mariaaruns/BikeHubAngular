@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MechanicService, MechanicLiveStats, MechanicStatus, DailyJob, AssignJobPayload, AssignedJob, MechanicSummary, JobDetails } from '../core/services/bike-services/mechanic.service';
+import { MechanicService, MechanicLiveStats, MechanicStatus, DailyJob, AssignJobPayload, AssignedJob, MechanicSummary, JobDetails, ServiceItem, PartItem, AddServiceItemPayload } from '../core/services/bike-services/mechanic.service';
 import { DropdownService, DropdownItem } from '../core/services/dropdown/dropdown.service';
 import { AuthService } from '../core/services/auth/auth.service';
 
@@ -68,6 +68,18 @@ export class BikeService implements OnInit, OnDestroy {
   jobDetailsLoading = signal(false);
   selectedJobDetails = signal<JobDetails | null>(null);
 
+  // Parts Modal
+  isPartsModalOpen = signal(false);
+  isPartsLoading = signal(false);
+  serviceItems = signal<ServiceItem[]>([]);
+  selectedPartsJobId = signal<number | null>(null);
+
+  partsForm!: FormGroup;
+  allParts = signal<PartItem[]>([]);
+  filteredParts = signal<PartItem[]>([]);
+  partCategories = signal<DropdownItem[]>([]);
+  isAddingPart = signal(false);
+
   assignForm!: FormGroup;
 
   currentTime = signal<Date>(new Date());
@@ -79,6 +91,7 @@ export class BikeService implements OnInit, OnDestroy {
 
     if (this.isMechanic()) {
       this.loadMechanicViewData();
+      this.initPartsForm();
       this.timerId = setInterval(() => this.currentTime.set(new Date()), 1000);
     } else {
       this.loadStats();
@@ -149,6 +162,98 @@ export class BikeService implements OnInit, OnDestroy {
       finalCost: [null, [Validators.required, Validators.min(0)]],
       durationHours: [0, [Validators.required, Validators.min(0)]],
       durationMinutes: [0, [Validators.required, Validators.min(0), Validators.max(59)]],
+    });
+  }
+
+  initPartsForm(): void {
+    this.partsForm = this.fb.group({
+      categoryId: ['', Validators.required],
+      partId: [{value: '', disabled: true}, Validators.required],
+      qty: [1, [Validators.required, Validators.min(1)]],
+      total: [{value: 0, disabled: true}, Validators.required]
+    });
+
+    this.partsForm.get('categoryId')?.valueChanges.subscribe(catId => {
+      if (catId) {
+        this.filteredParts.set(this.allParts().filter(p => p.categoryId == catId));
+        this.partsForm.get('partId')?.enable();
+        this.partsForm.get('partId')?.setValue('');
+        this.partsForm.get('qty')?.setValue(1);
+        this.partsForm.get('total')?.setValue(0);
+      } else {
+        this.filteredParts.set([]);
+        this.partsForm.get('partId')?.disable();
+        this.partsForm.get('partId')?.setValue('');
+      }
+    });
+
+    this.partsForm.get('partId')?.valueChanges.subscribe(partId => {
+      if (partId) {
+        const part = this.allParts().find(p => p.partId == partId);
+        if (part) {
+          const qty = this.partsForm.get('qty')?.value || 1;
+          this.partsForm.get('qty')?.setValue(qty);
+          this.partsForm.get('total')?.setValue(part.price * qty);
+        }
+      }
+    });
+
+    this.partsForm.get('qty')?.valueChanges.subscribe(qty => {
+      const partId = this.partsForm.get('partId')?.value;
+      if (partId && qty) {
+        const part = this.allParts().find(p => p.partId == partId);
+        if (part) {
+          this.partsForm.get('total')?.setValue(part.price * qty);
+        }
+      }
+    });
+  }
+
+  loadPartsData(): void {
+    if (this.partCategories().length === 0) {
+      this.dropdownService.getDropdown('servicepartscategory').subscribe(res => {
+        if (res.status && res.data) this.partCategories.set(res.data);
+      });
+    }
+    if (this.allParts().length === 0) {
+      this.mechanicService.getAllParts().subscribe(res => {
+        if (res.status && res.data) this.allParts.set(res.data);
+      });
+    }
+  }
+
+  submitAddPart(): void {
+    if (this.partsForm.invalid) {
+      this.partsForm.markAllAsTouched();
+      return;
+    }
+
+    const fv = this.partsForm.getRawValue();
+    const payload: AddServiceItemPayload = {
+      serviceJobId: this.selectedPartsJobId()!,
+      partId: Number(fv.partId),
+      qty: Number(fv.qty),
+      total: Number(fv.total),
+      createdAt: new Date().toISOString()
+    };
+
+    this.isAddingPart.set(true);
+    this.mechanicService.addServiceItem(payload).subscribe({
+      next: (res) => {
+        this.isAddingPart.set(false);
+        if (res.status) {
+          this.showToast('Part added successfully!', 'success');
+          this.partsForm.reset({ categoryId: '', partId: '', qty: 1, total: 0 });
+          this.partsForm.get('partId')?.disable();
+          this.openPartsModal(this.selectedPartsJobId()!); // Refresh list
+        } else {
+          this.showToast(res.message || 'Failed to add part.', 'error');
+        }
+      },
+      error: () => {
+        this.isAddingPart.set(false);
+        this.showToast('Network error while adding part.', 'error');
+      }
     });
   }
 
@@ -267,6 +372,7 @@ export class BikeService implements OnInit, OnDestroy {
   onEscape(): void {
     if (this.isDrawerOpen()) this.closeDrawer();
     if (this.isJobsModalOpen()) this.closeViewJobs();
+    if (this.isPartsModalOpen()) this.closePartsModal();
   }
 
   // ── View Jobs Modal ────────────────────────────────
@@ -475,6 +581,39 @@ export class BikeService implements OnInit, OnDestroy {
   closeJobDetails(): void {
     this.isJobDetailsModalOpen.set(false);
     this.selectedJobDetails.set(null);
+  }
+
+  openPartsModal(jobId: number): void {
+    if (!jobId) return;
+    this.selectedPartsJobId.set(jobId);
+    this.isPartsModalOpen.set(true);
+    this.isPartsLoading.set(true);
+    this.serviceItems.set([]);
+    this.loadPartsData();
+    this.partsForm.reset({ categoryId: '', partId: '', qty: 1, total: 0 });
+    this.partsForm.get('partId')?.disable();
+
+    this.mechanicService.getServiceItems(jobId).subscribe({
+      next: (res) => {
+        if (res.status && res.data) {
+          this.serviceItems.set(res.data);
+        } else {
+          this.serviceItems.set([]);
+        }
+        this.isPartsLoading.set(false);
+      },
+      error: () => {
+        this.showToast('Network error loading service items.', 'error');
+        this.serviceItems.set([]);
+        this.isPartsLoading.set(false);
+      }
+    });
+  }
+
+  closePartsModal(): void {
+    this.isPartsModalOpen.set(false);
+    this.selectedPartsJobId.set(null);
+    this.serviceItems.set([]);
   }
 
   get f() { return this.assignForm.controls; }
