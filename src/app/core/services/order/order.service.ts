@@ -6,9 +6,12 @@ import { ApiResponse, PagedResult } from '../../models/api-response.model';
 
 export interface Order {
   orderId: number;
+  orderDate: string;
   status: string;
   totalAmount: number;
   customerName: string;
+  razorPayOrderId: string | null;
+  paymentStatus: string;
   image: string;
 }
 
@@ -17,7 +20,9 @@ export interface OrderFilter {
   pageSize: number;
   orderId?: number | null;
   orderStatus?: number | null;
-  startDate?: string | null;
+  fromDate?: string | null;
+  toDate?: string | null;
+  paymentStatus?: number | null;
 }
 
 export interface OrderItemDetail {

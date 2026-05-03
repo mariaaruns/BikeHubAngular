@@ -28,7 +28,9 @@ export class Orders implements OnInit {
   // Filter Models
   searchOrderId = signal<number | null>(null);
   searchOrderStatus = signal<number | null>(null);
-  searchStartDate = signal<string | null>(null);
+  searchFromDate = signal<string | null>(null);
+  searchToDate = signal<string | null>(null);
+  searchPaymentStatus = signal<number | null>(null);
 
   // Pagination
   pageNumber = signal(1);
@@ -38,6 +40,7 @@ export class Orders implements OnInit {
 
   // Dropdowns
   orderStatuses = signal<DropdownItem[]>([]);
+  paymentStatuses = signal<DropdownItem[]>([]);
 
   // --- Create Order State ---
   isCreatingOrder = signal(false);
@@ -67,11 +70,18 @@ export class Orders implements OnInit {
 
   ngOnInit(): void {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    this.searchStartDate.set(`${year}-${month}`);
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    this.searchStartDate.set(`${year}-${month}`);
+    const formatDt = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    this.searchFromDate.set(formatDt(firstDay));
+    this.searchToDate.set(formatDt(lastDay));
 
     this.initCreateOrderForm();
     this.loadDropdowns();
@@ -96,6 +106,12 @@ export class Orders implements OnInit {
         }
       },
       error: () => this.load() // Load anyway on error
+    });
+
+    this.dropdownService.getDropdown('paymentstatus').subscribe(res => {
+      if (res.status && res.data) {
+        this.paymentStatuses.set(res.data);
+      }
     });
 
     // Preload other dropdowns to ensure they're ready when creating an order
@@ -124,7 +140,9 @@ export class Orders implements OnInit {
       pageSize: this.pageSize(),
       orderId: this.searchOrderId() || null,
       orderStatus: this.searchOrderStatus() || null,
-      startDate: this.searchStartDate() || null
+      fromDate: this.searchFromDate() || null,
+      toDate: this.searchToDate() || null,
+      paymentStatus: this.searchPaymentStatus() || null
     };
 
     this.orderService.getOrders(filter).subscribe({
@@ -527,6 +545,19 @@ export class Orders implements OnInit {
         this.isCompleting.set(false);
       }
     });
+  }
+
+  payOrder(order: Order): void {
+    if (!order.razorPayOrderId) {
+      this.showToast('Razorpay Order ID is missing for this order.', 'error');
+      return;
+    }
+    // We don't have a razorpaySecretKey from the order list response.
+    // Assuming backend verify endpoint can handle it if we initiate correctly,
+    // or we might need another backend integration. Passing empty string for now
+    // as it might be configured globally in Razorpay script if backend allows.
+    // If it fails, we need the secret key from the backend.
+    this.initRazorpay(order.razorPayOrderId, order.orderId, '');
   }
 
   loadRazorpayScript(): Promise<boolean> {

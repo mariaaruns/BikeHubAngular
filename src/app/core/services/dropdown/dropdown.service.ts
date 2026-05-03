@@ -21,7 +21,7 @@ export class DropdownService {
   private http = inject(HttpClient);
   private baseUrl = environment.apiUrl;
 
-  getDropdown(type: 'category' | 'brand' | 'orderstatus' | 'servicestatus' | 'customer' | 'servicepartscategory'): Observable<ApiResponse<DropdownItem[]>> {
+  getDropdown(type: 'category' | 'brand' | 'orderstatus' | 'servicestatus' | 'customer' | 'servicepartscategory' | 'paymentstatus'): Observable<ApiResponse<DropdownItem[]>> {
     return this.http.get<ApiResponse<DropdownItem[]>>(`${this.baseUrl}/Dropdown`, {
       params: { type }
     });

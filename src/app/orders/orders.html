@@ -6,7 +6,7 @@
     <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
       <div>
         <h1 class="page-title">Orders</h1>
-        <span class="page-subtitle">{{ totalRecords() }} total orders</span>
+        <span class="page-subtitle">Manage customer orders</span>
       </div>
       <button class="search-btn" (click)="startCreateOrder()" style="display: flex; align-items: center; gap: 6px;">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
@@ -35,7 +35,7 @@
       <div class="filter-group">
         <label>Status</label>
         <select class="filter-select" [ngModel]="searchOrderStatus()"
-          (ngModelChange)="searchOrderStatus.set($event); onFilter()">
+          (ngModelChange)="searchOrderStatus.set($event === 'null' ? null : +$event); onFilter()">
           @for (status of orderStatuses(); track status.value) {
           <option [value]="status.value">{{ status.text }}</option>
           }
@@ -43,16 +43,34 @@
       </div>
 
       <div class="filter-group">
-        <label>Month</label>
-        <input type="month" class="filter-date filter-select" [ngModel]="searchStartDate()"
-          (ngModelChange)="searchStartDate.set($event); onFilter()" />
+        <label>From Date</label>
+        <input type="date" class="filter-date filter-select" [ngModel]="searchFromDate()"
+          (ngModelChange)="searchFromDate.set($event); onFilter()" />
+      </div>
+
+      <div class="filter-group">
+        <label>To Date</label>
+        <input type="date" class="filter-date filter-select" [ngModel]="searchToDate()"
+          (ngModelChange)="searchToDate.set($event); onFilter()" />
+      </div>
+
+      <div class="filter-group">
+        <label>Payment Status</label>
+        <select class="filter-select" [ngModel]="searchPaymentStatus()"
+          (ngModelChange)="searchPaymentStatus.set($event === 'null' ? null : +$event); onFilter()">
+          <option [value]="null">All</option>
+          @for (status of paymentStatuses(); track status.value) {
+          <option [value]="status.value">{{ status.text }}</option>
+          }
+        </select>
       </div>
 
       <div class="filter-actions">
         <button class="search-btn" (click)="onFilter()">Filter</button>
       </div>
 
-      <div class="page-size-wrap">
+      <div class="page-size-wrap" style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 0.85rem; color: #64748b; font-weight: 500;">Total: {{ totalRecords() }}</span>
         <label>Show</label>
         <select class="page-size-select" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)">
           <option [value]="10">10</option>
@@ -80,8 +98,10 @@
         <thead>
           <tr>
             <th>Order ID</th>
+            <th>Date</th>
             <th>Customer</th>
             <th>Total Amount</th>
+            <th>Payment</th>
             <th>Status</th>
             <th class="actions-header">Actions</th>
           </tr>
@@ -89,12 +109,13 @@
         <tbody>
           @if (orders().length === 0) {
           <tr>
-            <td colspan="5" class="empty-row">No orders match your criteria.</td>
+            <td colspan="7" class="empty-row">No orders match your criteria.</td>
           </tr>
           }
           @for (order of orders(); track order.orderId) {
           <tr class="data-row">
             <td class="font-mono font-medium">#{{ order.orderId }}</td>
+            <td class="meta font-medium">{{ order.orderDate | date:'mediumDate' }}</td>
             <td>
               <div class="customer-cell">
                 <img [src]="getImageUrl(order.image)" [alt]="order.customerName" class="avatar"
@@ -106,6 +127,7 @@
               </div>
             </td>
             <td class="meta font-medium">{{ order.totalAmount | currency }}</td>
+            <td class="meta font-medium">{{ order.paymentStatus || 'N/A' }}</td>
             <td>
               <div class="inline-status-wrapper">
                 <select class="status-badge status-select" [ngClass]="getStatusClass(order.status)"
@@ -132,15 +154,25 @@
               </div>
             </td>
             <td class="actions-cell">
-              <!-- Placeholder view button, requirements didn't specify edit/view actions for orders yet -->
-              <button class="action-btn view-btn" title="View Order Details" (click)="viewOrderDetails(order.orderId)">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
+              <div style="display: flex; gap: 8px; align-items: center; justify-content: center;">
+                <button class="action-btn view-btn" title="View Order Details" (click)="viewOrderDetails(order.orderId)">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+                <button class="action-btn update-btn" title="Pay Order" 
+                  [disabled]="!order.razorPayOrderId"
+                  [style.opacity]="!order.razorPayOrderId ? '0.5' : '1'"
+                  [style.cursor]="!order.razorPayOrderId ? 'not-allowed' : 'pointer'"
+                  (click)="payOrder(order)">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V4.245c0-.754-.726-1.294-1.453-1.096a60.07 60.07 0 01-15.797 2.101c-.699.156-1.197.778-1.197 1.488v10.514c0 .71.498 1.332 1.197 1.488zM14.25 5.25v13.5m-3-13.5v13.5m-3-13.5v13.5" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
           }

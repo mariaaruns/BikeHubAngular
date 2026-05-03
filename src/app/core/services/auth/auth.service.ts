@@ -39,7 +39,22 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('auth_token');
+    const token = this.getToken();
+    if (!token) return false;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      if (decoded.exp) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (decoded.exp < currentTime) {
+          this.logout();
+          return false;
+        }
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   getToken(): string | null {
